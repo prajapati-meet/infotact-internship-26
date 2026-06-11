@@ -1,4 +1,4 @@
-package com.payment.ledger.dto;
+package com.payment.ledger.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.payment.ledger.dto.response;
+package  com.payment.ledger.dto.response;
 
 public class AuthResponse {
 

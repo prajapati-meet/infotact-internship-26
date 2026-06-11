@@ -1,6 +1,7 @@
-package com.ledger.repository;
+package com.payment.ledger.repository;
 
-import com.ledger.entity.LedgerEntry;
+
+import com.payment.ledger.entity.LedgerEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
