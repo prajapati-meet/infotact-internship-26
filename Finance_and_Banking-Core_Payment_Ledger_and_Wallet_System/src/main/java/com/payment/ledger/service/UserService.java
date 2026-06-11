@@ -5,7 +5,7 @@ import com.payment.ledger.entity.User;
 import com.payment.ledger.enums.Role;
 import com.payment.ledger.exception.UserAlreadyExistsException;
 import com.payment.ledger.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.payment.ledger.dto.response.AuthResponse;
