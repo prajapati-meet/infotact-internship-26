@@ -6,7 +6,7 @@ import com.payment.ledger.entity.Wallet;
 import com.payment.ledger.enums.WalletStatus;
 import com.payment.ledger.exception.ResourceNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,12 +36,12 @@ public class WalletService {
     }
 
     
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(readOnly = true)
     public WalletResponse getWalletForUser(User user) {
 
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Wallet not found"));
+                        new ResourceNotFoundException("Wallet not found for user: " + user.getEmail()));
 
         WalletResponse response = new WalletResponse();
 
