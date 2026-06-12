@@ -1,4 +1,4 @@
-package com.paymentledger.service;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.response.WalletResponse;
 import com.payment.ledger.entity.User;
