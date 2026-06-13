@@ -1,26 +1,4 @@
-<<<<<<< HEAD
-package com.payment.ledger.dto.response;
 
-public class AuthResponse {
-	
-	private String token;
-	private String username;
-	
-	public AuthResponse(String token, String username) {
-		this.token=token;
-		this.username=username;
-	}
-	
-	public String getToken() {
-		return token;
-	}
-	
-	public String getUsername() {
-		return username;
-	}
-
-}
-=======
 package  com.payment.ledger.dto.response;
 
 public class AuthResponse {
@@ -83,4 +61,4 @@ public class AuthResponse {
         this.username = username;
     }
 }
->>>>>>> main
+
