@@ -1,3 +1,4 @@
+
 package  com.payment.ledger.dto.response;
 
 public class AuthResponse {
@@ -60,3 +61,4 @@ public class AuthResponse {
         this.username = username;
     }
 }
+
