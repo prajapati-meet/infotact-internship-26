@@ -6,18 +6,19 @@ import com.payment.ledger.entity.Wallet;
 import com.payment.ledger.enums.WalletStatus;
 import com.payment.ledger.exception.ResourceNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
+import com.payment.ledger.service.interfaces.WalletService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
-public class WalletService {
+public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepository;
 
 
-    public WalletService(WalletRepository walletRepository) {
+    public WalletServiceImpl(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
     }
 
