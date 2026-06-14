@@ -78,10 +78,12 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return email;
     }
 
-    // Need to implement these methods when integrating Spring Security:
+    public String getDisplayName() {
+        return username;
+    }
 
     @Override
     public boolean isAccountNonExpired() {
@@ -123,10 +125,6 @@ public class User implements UserDetails {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
     }
 
     public void setPasswordHash(String passwordHash) {
