@@ -1,4 +1,4 @@
-package com.payment.ledger.service;
+package com.payment.ledger.service.interfaces;
 
 import com.payment.ledger.dto.request.DepositRequest;
 import com.payment.ledger.dto.request.TransferRequest;
@@ -8,7 +8,6 @@ import com.payment.ledger.dto.response.TransferResponse;
 import com.payment.ledger.entity.User;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface TransferService {
 

@@ -1,4 +1,4 @@
-package com.payment.ledger.service;
+package com.payment.ledger.service.interfaces;
 
 import com.payment.ledger.dto.response.LedgerEntryResponse;
 import com.payment.ledger.entity.User;
@@ -7,6 +7,7 @@ import com.payment.ledger.enums.EntryType;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public interface LedgerService {
 

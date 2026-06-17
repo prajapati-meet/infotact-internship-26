@@ -1,4 +1,4 @@
-package com.payment.ledger.service;
+package com.payment.ledger.service.impl;
 
 import com.payment.ledger.dto.request.DepositRequest;
 import com.payment.ledger.dto.request.TransferRequest;
@@ -13,6 +13,8 @@ import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
 import com.payment.ledger.exception.WalletNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
+import com.payment.ledger.service.interfaces.LedgerService;
+import com.payment.ledger.service.interfaces.TransferService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,6 +122,21 @@ public class TransferServiceImpl implements TransferService {
                 description,
                 LocalDateTime.now()
         );
+    }
+
+    @Override
+    public TransferResponse deposit(User user, DepositRequest request) {
+        return null;
+    }
+
+    @Override
+    public TransferResponse withdraw(User user, WithdrawRequest request) {
+        return null;
+    }
+
+    @Override
+    public List<LedgerEntryResponse> getTransactionHistory(User user) {
+        return List.of();
     }
 
 }

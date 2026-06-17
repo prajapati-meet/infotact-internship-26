@@ -1,9 +1,7 @@
 package com.payment.ledger.controller;
 
-//import com.payment.ledger.service.UserService;
-//import org.apache.catalina.User;
+
 import com.payment.ledger.entity.User;
-//import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +16,7 @@ import com.payment.ledger.dto.request.LoginRequest;
 import com.payment.ledger.dto.request.RegisterRequest;
 import com.payment.ledger.dto.response.AuthResponse;
 import com.payment.ledger.service.JwtService;
-import com.payment.ledger.service.UserService;
+import com.payment.ledger.service.interfaces.UserService;
 
 import jakarta.validation.Valid;
 @RestController

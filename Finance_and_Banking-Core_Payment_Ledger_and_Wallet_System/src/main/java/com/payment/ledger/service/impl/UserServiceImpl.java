@@ -1,10 +1,13 @@
-package com.payment.ledger.service;
+package com.payment.ledger.service.impl;
 
 import com.payment.ledger.dto.request.RegisterRequest;
 import com.payment.ledger.entity.User;
 import com.payment.ledger.enums.Role;
 import com.payment.ledger.exception.UserAlreadyExistsException;
 import com.payment.ledger.repository.UserRepository;
+import com.payment.ledger.service.JwtService;
+import com.payment.ledger.service.interfaces.UserService;
+import com.payment.ledger.service.interfaces.WalletService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -62,7 +65,7 @@ public class UserServiceImpl implements UserService {
         response.setTokenType(BEARER);
         response.setExpiresIn(86400); // or jwtExpiration
         response.setEmail(savedUser.getEmail());
-        response.setUsername(savedUser.getUsername());
+        response.setUsername(savedUser.getDisplayName());
 
         return response;
 

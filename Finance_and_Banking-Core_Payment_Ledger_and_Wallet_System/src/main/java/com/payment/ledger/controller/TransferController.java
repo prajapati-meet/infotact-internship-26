@@ -3,7 +3,7 @@ package com.payment.ledger.controller;
 import com.payment.ledger.dto.request.TransferRequest;
 import com.payment.ledger.dto.response.TransferResponse;
 import com.payment.ledger.entity.User;
-import com.payment.ledger.service.TransferService;
+import com.payment.ledger.service.interfaces.TransferService;
 
 import jakarta.validation.Valid;
 
