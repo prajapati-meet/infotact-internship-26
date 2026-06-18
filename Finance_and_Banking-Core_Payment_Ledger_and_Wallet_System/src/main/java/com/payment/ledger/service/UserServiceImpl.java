@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
         response.setTokenType(BEARER);
         response.setExpiresIn(86400); // or jwtExpiration
         response.setEmail(savedUser.getEmail());
-        response.setUsername(savedUser.getUsername());
+        response.setUsername(savedUser.getDisplayName());
 
         return response;
 

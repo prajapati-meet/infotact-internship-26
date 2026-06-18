@@ -122,7 +122,6 @@ public class TransferServiceImpl implements TransferService {
         );
     }
 
-    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public TransferResponse deposit(User user, DepositRequest request) {
 
@@ -151,4 +150,5 @@ public class TransferServiceImpl implements TransferService {
         return new TransferResponse(referenceId, null, wallet.getId(),
                 request.getAmount(), balanceAfter, description, LocalDateTime.now());
     }
+
 }
