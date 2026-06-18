@@ -122,23 +122,6 @@ public class TransferServiceImpl implements TransferService {
         );
     }
 
-    @Override
-<<<<<<< HEAD:Finance_and_Banking-Core_Payment_Ledger_and_Wallet_System/src/main/java/com/payment/ledger/service/impl/TransferServiceImpl.java
-    public TransferResponse deposit(User user, DepositRequest request) {
-        return null;
-    }
-
-    @Override
-    public TransferResponse withdraw(User user, WithdrawRequest request) {
-        return null;
-    }
-
-    @Override
-    public List<LedgerEntryResponse> getTransactionHistory(User user) {
-        return List.of();
-    }
-
-=======
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public TransferResponse deposit(User user, DepositRequest request) {
 
