@@ -8,7 +8,6 @@ import com.payment.ledger.dto.response.TransferResponse;
 import com.payment.ledger.entity.User;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface TransferService {
 

@@ -61,11 +61,11 @@ public class WalletController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<List<LedgerEntryResponse>> getTransactions(
+    public ResponseEntity<List<LedgerEntryResponse>> getTransactionHistory(
             @AuthenticationPrincipal User user) {
 
         List<LedgerEntryResponse> transactions =
-              walletService.getTransactionHistory(user);
+                walletService.getTransactionHistory(user);
 
         return ResponseEntity.ok(transactions);
     }

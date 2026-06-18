@@ -122,4 +122,33 @@ public class TransferServiceImpl implements TransferService {
         );
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public TransferResponse deposit(User user, DepositRequest request) {
+
+        Wallet wallet = walletRepository.findByIdWithLock(
+                        walletRepository.findByUser(user)
+                                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"))
+                                .getId())
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (wallet.getStatus() != WalletStatus.ACTIVE) {
+            throw new InvalidTransferException("Wallet is not active");
+        }
+
+        String referenceId = UUID.randomUUID().toString();
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter  = balanceBefore.add(request.getAmount());
+
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        String description = request.getDescription() != null ? request.getDescription() : "Deposit";
+
+        ledgerService.recordEntry(wallet, user, EntryType.CREDIT,
+                request.getAmount(), balanceBefore, balanceAfter, referenceId, description);
+
+        return new TransferResponse(referenceId, null, wallet.getId(),
+                request.getAmount(), balanceAfter, description, LocalDateTime.now());
+    }
+
 }
