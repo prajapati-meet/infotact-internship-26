@@ -150,5 +150,5 @@ public class TransferServiceImpl implements TransferService {
         return new TransferResponse(referenceId, null, wallet.getId(),
                 request.getAmount(), balanceAfter, description, LocalDateTime.now());
     }
->>>>>>> main:Finance_and_Banking-Core_Payment_Ledger_and_Wallet_System/src/main/java/com/payment/ledger/service/TransferServiceImpl.java
+
 }
