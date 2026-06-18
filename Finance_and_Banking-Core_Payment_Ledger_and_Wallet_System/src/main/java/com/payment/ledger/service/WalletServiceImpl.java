@@ -1,4 +1,4 @@
-package com.payment.ledger.service.impl;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.response.WalletResponse;
 import com.payment.ledger.entity.User;
@@ -6,7 +6,6 @@ import com.payment.ledger.entity.Wallet;
 import com.payment.ledger.enums.WalletStatus;
 import com.payment.ledger.exception.ResourceNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
-import com.payment.ledger.service.interfaces.WalletService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 

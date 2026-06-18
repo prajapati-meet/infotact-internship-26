@@ -1,4 +1,4 @@
-package com.payment.ledger.service.interfaces;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.request.DepositRequest;
 import com.payment.ledger.dto.request.TransferRequest;

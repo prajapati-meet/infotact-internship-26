@@ -16,7 +16,7 @@ import com.payment.ledger.dto.request.LoginRequest;
 import com.payment.ledger.dto.request.RegisterRequest;
 import com.payment.ledger.dto.response.AuthResponse;
 import com.payment.ledger.service.JwtService;
-import com.payment.ledger.service.interfaces.UserService;
+import com.payment.ledger.service.UserService;
 
 import jakarta.validation.Valid;
 @RestController

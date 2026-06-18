@@ -14,9 +14,9 @@ import com.payment.ledger.dto.request.WithdrawRequest;
 import com.payment.ledger.dto.response.LedgerEntryResponse;
 import com.payment.ledger.dto.response.TransferResponse;
 import com.payment.ledger.dto.response.WalletResponse;
-import com.payment.ledger.service.interfaces.TransferService;
+import com.payment.ledger.service.TransferService;
 import com.payment.ledger.entity.User;
-import com.payment.ledger.service.interfaces.WalletService;
+import com.payment.ledger.service.WalletService;
 import jakarta.validation.Valid;
 
 @RestController

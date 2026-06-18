@@ -1,4 +1,4 @@
-package com.payment.ledger.service.interfaces;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.request.RegisterRequest;
 import com.payment.ledger.dto.response.AuthResponse;

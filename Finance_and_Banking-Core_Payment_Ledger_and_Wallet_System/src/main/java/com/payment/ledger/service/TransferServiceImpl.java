@@ -1,4 +1,4 @@
-package com.payment.ledger.service.impl;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.request.DepositRequest;
 import com.payment.ledger.dto.request.TransferRequest;
@@ -13,8 +13,6 @@ import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
 import com.payment.ledger.exception.WalletNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
-import com.payment.ledger.service.interfaces.LedgerService;
-import com.payment.ledger.service.interfaces.TransferService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -125,6 +123,7 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
+<<<<<<< HEAD:Finance_and_Banking-Core_Payment_Ledger_and_Wallet_System/src/main/java/com/payment/ledger/service/impl/TransferServiceImpl.java
     public TransferResponse deposit(User user, DepositRequest request) {
         return null;
     }
@@ -139,4 +138,34 @@ public class TransferServiceImpl implements TransferService {
         return List.of();
     }
 
+=======
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public TransferResponse deposit(User user, DepositRequest request) {
+
+        Wallet wallet = walletRepository.findByIdWithLock(
+                        walletRepository.findByUser(user)
+                                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"))
+                                .getId())
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (wallet.getStatus() != WalletStatus.ACTIVE) {
+            throw new InvalidTransferException("Wallet is not active");
+        }
+
+        String referenceId = UUID.randomUUID().toString();
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter  = balanceBefore.add(request.getAmount());
+
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        String description = request.getDescription() != null ? request.getDescription() : "Deposit";
+
+        ledgerService.recordEntry(wallet, user, EntryType.CREDIT,
+                request.getAmount(), balanceBefore, balanceAfter, referenceId, description);
+
+        return new TransferResponse(referenceId, null, wallet.getId(),
+                request.getAmount(), balanceAfter, description, LocalDateTime.now());
+    }
+>>>>>>> main:Finance_and_Banking-Core_Payment_Ledger_and_Wallet_System/src/main/java/com/payment/ledger/service/TransferServiceImpl.java
 }

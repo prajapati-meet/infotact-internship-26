@@ -1,13 +1,10 @@
-package com.payment.ledger.service.impl;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.request.RegisterRequest;
 import com.payment.ledger.entity.User;
 import com.payment.ledger.enums.Role;
 import com.payment.ledger.exception.UserAlreadyExistsException;
 import com.payment.ledger.repository.UserRepository;
-import com.payment.ledger.service.JwtService;
-import com.payment.ledger.service.interfaces.UserService;
-import com.payment.ledger.service.interfaces.WalletService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

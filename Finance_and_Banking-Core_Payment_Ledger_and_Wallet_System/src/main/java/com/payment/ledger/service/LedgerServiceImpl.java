@@ -1,4 +1,4 @@
-package com.payment.ledger.service.impl;
+package com.payment.ledger.service;
 
 import com.payment.ledger.dto.response.LedgerEntryResponse;
 import com.payment.ledger.entity.LedgerEntry;
@@ -6,7 +6,6 @@ import com.payment.ledger.entity.User;
 import com.payment.ledger.entity.Wallet;
 import com.payment.ledger.enums.EntryType;
 import com.payment.ledger.repository.LedgerEntryRepository;
-import com.payment.ledger.service.interfaces.LedgerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
