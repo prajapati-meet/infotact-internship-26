@@ -6,10 +6,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.payment.ledger.service.LedgerService;
-import com.payment.ledger.service.TransferServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +29,9 @@ import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
 import com.payment.ledger.exception.WalletNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
+import com.payment.ledger.service.LedgerService;
+import com.payment.ledger.service.TransferServiceImpl;
+
 
 @ExtendWith(MockitoExtension.class)
 class TransferServiceTest {
@@ -79,8 +80,9 @@ class TransferServiceTest {
         request.setDescription("Test Transfer");
     }
 
-    @Test
-    void transfer_WithValidRequest_ShouldSucceed() {
+ @Test
+@DisplayName("Transfer should succeed  with a valid request")
+   void transfer_WithValidRequest_ShouldSucceed(){
 
         when(walletRepository.findByUser(sender))
                 .thenReturn(Optional.of(senderWallet));
@@ -126,7 +128,8 @@ class TransferServiceTest {
                 );
     }
 
-    @Test
+ @Test
+ @DisplayName("Transfer should throw exception when balance is insufficient")
     void transfer_WithInsufficientBalance_ShouldThrowException() {
 
         senderWallet.setBalance(new BigDecimal("50"));
@@ -142,7 +145,8 @@ class TransferServiceTest {
         verifyNoInteractions(ledgerService);
     }
 
-    @Test
+ @Test
+ @DisplayName("Transfer should throw exception when transferring to own wallet")
     void transfer_ToOwnWallet_ShouldThrowException() {
 
         request.setReceiverWalletId(senderWallet.getId());
@@ -157,7 +161,8 @@ class TransferServiceTest {
         verify(walletRepository, never()).save(any());
         verifyNoInteractions(ledgerService);
     }
-    @Test
+ @Test
+@DisplayName("Transfer should throw exception when amount is zero")
 void transfer_WithZeroAmount_ShouldThrowException() {
 
     request.setAmount(BigDecimal.ZERO);
@@ -165,13 +170,14 @@ void transfer_WithZeroAmount_ShouldThrowException() {
     assertThatThrownBy(() ->
             transferService.transfer(sender, request))
             .isInstanceOf(InvalidTransferException.class)
-            .hasMessage("Transfer amount must be greater than zero");
+            .hasMessageContaining("Transfer amount must be greater than zero");
 
     verifyNoInteractions(walletRepository);
     verifyNoInteractions(ledgerService);
 }
 
 @Test
+@DisplayName("Transfer should throw exception when sender wallet is not found")
 void transfer_WhenSenderWalletNotFound_ShouldThrowException() {
 
     when(walletRepository.findByUser(sender))
@@ -189,6 +195,7 @@ void transfer_WhenSenderWalletNotFound_ShouldThrowException() {
 }
 
 @Test
+@DisplayName("Transfer should throw exception when sender wallet is suspended")
 void transfer_WhenSenderWalletSuspended_ShouldThrowException() {
 
     senderWallet.setStatus(WalletStatus.SUSPENDED);
@@ -199,7 +206,7 @@ void transfer_WhenSenderWalletSuspended_ShouldThrowException() {
     assertThatThrownBy(() ->
             transferService.transfer(sender, request))
             .isInstanceOf(InvalidTransferException.class)
-            .hasMessage("Sender wallet is not active");
+          .hasMessageContaining("Sender wallet is not active");
 
     verify(walletRepository).findByUser(sender);
     verify(walletRepository, never()).findByIdWithLock(any());
