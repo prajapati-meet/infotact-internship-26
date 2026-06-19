@@ -151,4 +151,50 @@ public class TransferServiceImpl implements TransferService {
                 request.getAmount(), balanceAfter, description, LocalDateTime.now());
     }
 
+    @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public TransferResponse withdraw(User user, WithdrawRequest request) {
+
+        Wallet wallet = walletRepository.findByIdWithLock(
+                        walletRepository.findByUser(user)
+                                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"))
+                                .getId())
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (wallet.getStatus() != WalletStatus.ACTIVE) {
+            throw new InvalidTransferException("Wallet is not active");
+        }
+
+        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new InsufficientBalanceException(
+                    "Insufficient balance. Available: " + wallet.getBalance() +
+                            ", Required: " + request.getAmount());
+        }
+
+        String referenceId = UUID.randomUUID().toString();
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter  = balanceBefore.subtract(request.getAmount());
+
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        String description = request.getDescription() != null ? request.getDescription() : "Withdrawal";
+
+        ledgerService.recordEntry(wallet, user, EntryType.DEBIT,
+                request.getAmount(), balanceBefore, balanceAfter, referenceId, description);
+
+        return new TransferResponse(referenceId, wallet.getId(), null,
+                request.getAmount(), balanceAfter, description, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LedgerEntryResponse> getTransactionHistory(User user) {
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        return ledgerService.getTransactionHistory(wallet.getId());
+    }
+}
+
 }
