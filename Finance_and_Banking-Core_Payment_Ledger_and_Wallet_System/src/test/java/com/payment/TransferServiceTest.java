@@ -5,6 +5,8 @@ import com.payment.ledger.dto.response.TransferResponse;
 import com.payment.ledger.entity.User;
 import com.payment.ledger.entity.Wallet;
 import com.payment.ledger.enums.WalletStatus;
+import com.payment.ledger.enums.Role;
+import org.junit.jupiter.api.DisplayName;
 import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
 import com.payment.ledger.repository.WalletRepository;
@@ -50,28 +52,53 @@ class TransferServiceTest {
         sender = new User();
         receiver = new User();
 
+        sender.setId(UUID.randomUUID());
+        sender.setUsername("senderUser");
+        sender.setRole(Role.USER);
+
+        receiver.setId(UUID.randomUUID());
+        receiver.setUsername("receiverUser");
+        receiver.setRole(Role.USER);
+
         sender.setEmail("sender@test.com");
         receiver.setEmail("receiver@test.com");
 
         senderWallet = new Wallet();
         senderWallet.setId(UUID.randomUUID());
         senderWallet.setUser(sender);
-        senderWallet.setBalance(new BigDecimal("1000"));
+        senderWallet.setBalance(new BigDecimal("500.00"));
+        senderWallet.setCurrency("USD");
         senderWallet.setStatus(WalletStatus.ACTIVE);
 
         receiverWallet = new Wallet();
         receiverWallet.setId(UUID.randomUUID());
         receiverWallet.setUser(receiver);
-        receiverWallet.setBalance(new BigDecimal("500"));
+        receiverWallet.setBalance(new BigDecimal("100.00"));
+        receiverWallet.setCurrency("USD");
         receiverWallet.setStatus(WalletStatus.ACTIVE);
 
         request = new TransferRequest();
         request.setReceiverWalletId(receiverWallet.getId());
         request.setAmount(new BigDecimal("100"));
         request.setDescription("Test Transfer");
+
+        when(walletRepository.save(any(Wallet.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+        doNothing().when(ledgerService).recordEntry(
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any()
+        );
     }
 
     @Test
+    @DisplayName("Transfer should succeed with valid request")
     void transfer_WithValidRequest_ShouldSucceed() {
 
         when(walletRepository.findByUser(sender))
@@ -97,10 +124,10 @@ class TransferServiceTest {
         assertThat(response).isNotNull();
 
         assertThat(senderWallet.getBalance())
-                .isEqualByComparingTo("900");
+                .isEqualByComparingTo("400.00");
 
         assertThat(receiverWallet.getBalance())
-                .isEqualByComparingTo("600");
+                .isEqualByComparingTo("200.00");
 
         verify(walletRepository, times(2))
                 .save(any(Wallet.class));
@@ -119,6 +146,7 @@ class TransferServiceTest {
     }
 
     @Test
+    @DisplayName("Transfer should throw exception when balance is insufficient")
     void transfer_WithInsufficientBalance_ShouldThrowException() {
 
         senderWallet.setBalance(new BigDecimal("50"));
@@ -135,6 +163,7 @@ class TransferServiceTest {
     }
 
     @Test
+    @DisplayName("Transfer should throw exception when transferring to own wallet")
     void transfer_ToOwnWallet_ShouldThrowException() {
 
         request.setReceiverWalletId(senderWallet.getId());
