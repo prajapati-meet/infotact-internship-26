@@ -65,7 +65,7 @@ public class WalletController {
             @AuthenticationPrincipal User user) {
 
         List<LedgerEntryResponse> transactions =
-                walletService.getTransactionHistory(user);
+                transferService.getTransactionHistory(user);
 
         return ResponseEntity.ok(transactions);
     }
