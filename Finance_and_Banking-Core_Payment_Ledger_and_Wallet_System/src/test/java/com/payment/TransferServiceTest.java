@@ -1,4 +1,26 @@
-package com.payment.ledger.service;
+package com.payment;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.payment.ledger.service.LedgerService;
+import com.payment.ledger.service.TransferServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.payment.ledger.dto.request.TransferRequest;
 import com.payment.ledger.dto.response.TransferResponse;
@@ -9,22 +31,8 @@ import com.payment.ledger.enums.Role;
 import org.junit.jupiter.api.DisplayName;
 import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
+import com.payment.ledger.exception.WalletNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TransferServiceTest {
@@ -178,4 +186,53 @@ class TransferServiceTest {
         verify(walletRepository, never()).save(any());
         verifyNoInteractions(ledgerService);
     }
+    @Test
+void transfer_WithZeroAmount_ShouldThrowException() {
+
+    request.setAmount(BigDecimal.ZERO);
+
+    assertThatThrownBy(() ->
+            transferService.transfer(sender, request))
+            .isInstanceOf(InvalidTransferException.class)
+            .hasMessage("Transfer amount must be greater than zero");
+
+    verifyNoInteractions(walletRepository);
+    verifyNoInteractions(ledgerService);
+}
+
+@Test
+void transfer_WhenSenderWalletNotFound_ShouldThrowException() {
+
+    when(walletRepository.findByUser(sender))
+            .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() ->
+            transferService.transfer(sender, request))
+            .isInstanceOf(WalletNotFoundException.class)
+            .hasMessageContaining("Sender wallet not found");
+
+    verify(walletRepository).findByUser(sender);
+    verify(walletRepository, never()).findByIdWithLock(any());
+    verify(walletRepository, never()).save(any());
+    verifyNoInteractions(ledgerService);
+}
+
+@Test
+void transfer_WhenSenderWalletSuspended_ShouldThrowException() {
+
+    senderWallet.setStatus(WalletStatus.SUSPENDED);
+
+    when(walletRepository.findByUser(sender))
+            .thenReturn(Optional.of(senderWallet));
+
+    assertThatThrownBy(() ->
+            transferService.transfer(sender, request))
+            .isInstanceOf(InvalidTransferException.class)
+            .hasMessage("Sender wallet is not active");
+
+    verify(walletRepository).findByUser(sender);
+    verify(walletRepository, never()).findByIdWithLock(any());
+    verify(walletRepository, never()).save(any());
+    verifyNoInteractions(ledgerService);
+}
 }
