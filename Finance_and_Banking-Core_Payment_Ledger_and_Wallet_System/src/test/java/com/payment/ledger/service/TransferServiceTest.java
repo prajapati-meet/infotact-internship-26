@@ -1,4 +1,4 @@
-package com.payment;
+package com.payment.ledger.service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -29,8 +29,7 @@ import com.payment.ledger.exception.InsufficientBalanceException;
 import com.payment.ledger.exception.InvalidTransferException;
 import com.payment.ledger.exception.WalletNotFoundException;
 import com.payment.ledger.repository.WalletRepository;
-import com.payment.ledger.service.LedgerService;
-import com.payment.ledger.service.TransferServiceImpl;
+
 
 
 @ExtendWith(MockitoExtension.class)
