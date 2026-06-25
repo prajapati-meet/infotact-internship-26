@@ -4,17 +4,20 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.payment.ledger.exception.InvalidIdempotencyKeyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -127,6 +130,62 @@ import org.springframework.data.redis.core.ValueOperations;
                 .set(anyString(), any(), any(Duration.class));
 
         
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+
+
+
+    @Test
+    void executeIdempotent_WhenLockFailsAndNoResponse_ShouldThrowException() {
+
+        String idempotencyKey = "test-key";
+        String lockKey = "idempotency:lock:" + idempotencyKey;
+        String responseKey = "idempotency:response:" + idempotencyKey;
+
+        AtomicInteger executionCount = new AtomicInteger(0);
+
+        // No cached response exists
+        when(valueOperations.get(responseKey)).thenReturn(null);
+
+        // Lock acquisition fails
+        when(valueOperations.setIfAbsent(
+                eq(lockKey),
+                eq("PROCESSING"),
+                eq(Duration.ofSeconds(30))
+        )).thenReturn(false);
+
+        // Verify exception is thrown
+        assertThrows(
+                InvalidIdempotencyKeyException.class,
+                () -> idempotencyService.executeIdempotent(
+                        idempotencyKey,
+                        String.class,
+                        () -> {
+                            executionCount.incrementAndGet();
+                            return "SUCCESS";
+                        }
+                )
+        );
+
+        // Operation should not execute
+        assertEquals(0, executionCount.get());
+
+        // Verify cache lookup happened twice
+        verify(valueOperations, times(2)).get(responseKey);
+
+        // Verify lock acquisition attempt
+        verify(valueOperations).setIfAbsent(
+                eq(lockKey),
+                eq("PROCESSING"),
+                eq(Duration.ofSeconds(30))
+        );
+
+        // Verify no response cached
+        verify(valueOperations, never())
+                .set(anyString(), any(), any(Duration.class));
+
+        // Verify lock not deleted
         verify(redisTemplate, never()).delete(anyString());
     }
 
