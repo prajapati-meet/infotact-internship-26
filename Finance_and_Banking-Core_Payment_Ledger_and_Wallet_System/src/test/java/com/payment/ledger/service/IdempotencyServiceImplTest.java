@@ -125,7 +125,7 @@ import org.springframework.data.redis.core.ValueOperations;
         verify(valueOperations, never())
                 .setIfAbsent(anyString(), any(), any(Duration.class));
 
-        // Verify no cache write
+     
         verify(valueOperations, never())
                 .set(anyString(), any(), any(Duration.class));
 
@@ -188,5 +188,57 @@ import org.springframework.data.redis.core.ValueOperations;
         // Verify lock not deleted
         verify(redisTemplate, never()).delete(anyString());
     }
+@Test
+void executeIdempotent_WhenOperationFails_ShouldReleaseLock() {
 
+    String idempotencyKey = "test-key";
+    String lockKey = "idempotency:lock:" + idempotencyKey;
+    String responseKey = "idempotency:response:" + idempotencyKey;
+
+   
+    when(valueOperations.get(responseKey)).thenReturn(null);
+
+   
+    when(valueOperations.setIfAbsent(
+            eq(lockKey),
+            eq("PROCESSING"),
+            eq(Duration.ofSeconds(30))
+    )).thenReturn(true);
+
+    RuntimeException exception = new RuntimeException("Operation failed");
+
+    RuntimeException thrown = assertThrows(
+            RuntimeException.class,
+            () -> idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    String.class,
+                    () -> {
+                        throw exception;
+                    }
+            )
+    );
+
+  
+    assertEquals("Operation failed", thrown.getMessage());
+
+   
+    verify(valueOperations).get(responseKey);
+
+  
+    verify(valueOperations).setIfAbsent(
+            eq(lockKey),
+            eq("PROCESSING"),
+            eq(Duration.ofSeconds(30))
+    );
+
+   
+    verify(valueOperations, never()).set(
+            anyString(),
+            any(),
+            any(Duration.class)
+    );
+
+  
+    verify(redisTemplate).delete(lockKey);
+}
 }
