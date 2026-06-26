@@ -9,6 +9,8 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -82,7 +84,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleLocked(LockedException ex) {
         return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
-                "Account is locked",
+                "Account is temporarily locked due to multiple failed login attempts. Please try again in 15 minutes.",
                 null
         );
     }
@@ -147,6 +149,24 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
+                null
+        );
+    }
+
+    @ExceptionHandler(AccountExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleAccountExpired(AccountExpiredException ex) {
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Account has expired",
+                null
+        );
+    }
+
+    @ExceptionHandler(CredentialsExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleCredentialsExpired(CredentialsExpiredException ex) {
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Password has expired. Please reset your password.",
                 null
         );
     }
