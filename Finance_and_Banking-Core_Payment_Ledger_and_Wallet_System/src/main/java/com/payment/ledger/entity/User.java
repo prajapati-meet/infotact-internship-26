@@ -45,13 +45,13 @@ public class User implements UserDetails {
     @Column(name = "updatedAt", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "enabled", nullable = false)
+    @Column(name = "enabled", nullable = false, columnDefinition = "boolean default true")
     private boolean enabled;
 
-    @Column(name = "accountLocked", nullable = false)
+    @Column(name = "account_locked", nullable = false, columnDefinition = "boolean default false")
     private boolean accountLocked;
 
-    @Column(name = "failedLoginAttempts", nullable = false)
+    @Column(name = "failed_login_attempts", nullable = false, columnDefinition = "integer default 0")
     private int failedLoginAttempts;
 
     @Column(name = "lockedUntil")
