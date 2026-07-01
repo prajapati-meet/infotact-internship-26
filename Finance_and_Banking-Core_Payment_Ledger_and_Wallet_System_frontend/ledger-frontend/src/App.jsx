@@ -11,7 +11,7 @@ const App = () => {
 
 export default App
 
-//we need follow these method deepika
+we need follow these method deepika
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
@@ -29,3 +29,4 @@ function App() {
 }
 
 export default App;
+
