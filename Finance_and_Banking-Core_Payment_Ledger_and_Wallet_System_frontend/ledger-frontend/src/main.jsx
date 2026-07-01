@@ -10,4 +10,9 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
   </BrowserRouter>
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
 )
