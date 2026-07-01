@@ -1,3 +1,16 @@
+// 
+import React from 'react'
+import RegisterPage from './RegisterPage'
+
+const App = () => {
+  return (
+    <div>App
+      <RegisterPage/>
+    </div>
+  )
+}
+
+export default App
 // import { useState } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from './assets/vite.svg'
