@@ -1,9 +1,10 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,19 +18,12 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // Temporary login logic
-      console.log("Email:", email);
-      console.log("Password:", password);
-
-      // Simulate API request
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Redirect after successful login
+      await login(email, password);
       navigate("/dashboard");
     } catch (err) {
       setError(
-        err?.response?.data?.message ||
-        "Login failed. Please try again."
+        err.response?.data?.message ||
+        "Invalid email or password."
       );
     } finally {
       setLoading(false);
@@ -43,14 +37,14 @@ const LoginPage = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f4f7fc",
+        background: "#f4f7fc",
         fontFamily: "Arial, sans-serif",
       }}
     >
       <div
         style={{
           width: "400px",
-          backgroundColor: "#fff",
+          background: "#fff",
           padding: "35px",
           borderRadius: "12px",
           boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
@@ -73,22 +67,22 @@ const LoginPage = () => {
             marginBottom: "25px",
           }}
         >
-          Sign in to your account
+          Login to your account
         </p>
 
         {error && (
-          <p
+          <div
             style={{
-              color: "#e63946",
-              backgroundColor: "#fdeaea",
+              background: "#fee2e2",
+              color: "#b91c1c",
               padding: "10px",
               borderRadius: "6px",
+              marginBottom: "20px",
               textAlign: "center",
-              marginBottom: "15px",
             }}
           >
             {error}
-          </p>
+          </div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -98,7 +92,6 @@ const LoginPage = () => {
                 display: "block",
                 marginBottom: "6px",
                 fontWeight: "bold",
-                color: "#444",
               }}
             >
               Email
@@ -127,7 +120,6 @@ const LoginPage = () => {
                 display: "block",
                 marginBottom: "6px",
                 fontWeight: "bold",
-                color: "#444",
               }}
             >
               Password
@@ -171,8 +163,8 @@ const LoginPage = () => {
 
         <p
           style={{
-            textAlign: "center",
             marginTop: "20px",
+            textAlign: "center",
             color: "#555",
           }}
         >
@@ -181,8 +173,8 @@ const LoginPage = () => {
             to="/register"
             style={{
               color: "#2563eb",
-              textDecoration: "none",
               fontWeight: "bold",
+              textDecoration: "none",
             }}
           >
             Register
