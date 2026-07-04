@@ -1,71 +1,100 @@
 package com.payment.ledger.service;
 
-import com.payment.ledger.dto.request.RegisterRequest;
+import com.payment.ledger.dto.request.InitiateRegistrationRequest;
+import com.payment.ledger.dto.request.VerifyOtpRequest;
+import com.payment.ledger.dto.response.AuthResponse;
+import com.payment.ledger.dto.response.OtpResponse;
 import com.payment.ledger.entity.User;
+import com.payment.ledger.enums.*;
 import com.payment.ledger.enums.Role;
+import com.payment.ledger.exception.InvalidOtpException;
+import com.payment.ledger.exception.ResourceNotFoundException;
 import com.payment.ledger.exception.UserAlreadyExistsException;
 import com.payment.ledger.repository.UserRepository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.payment.ledger.dto.response.AuthResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final String BEARER = "Bearer";
     private final UserRepository userRepository;
     private final WalletService walletService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final OtpService otpService;
 
     public UserServiceImpl(UserRepository userRepository,
                            WalletService walletService,
                            JwtService jwtService,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           OtpService otpService) {
         this.userRepository = userRepository;
         this.walletService = walletService;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.otpService = otpService;
     }
 
+    @Override
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public OtpResponse initiateRegistration(InitiateRegistrationRequest request) {
 
-        // Check email uniqueness
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException(
-                    "Email already registered: " + request.getEmail());
+        if (userRepository.existsByEmailAndAccountStatus(request.getEmail(), AccountStatus.ACTIVE)) {
+            throw new UserAlreadyExistsException("Email already registered: " + request.getEmail());
         }
 
-        // Check username uniqueness
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new UserAlreadyExistsException(
-                    "Username already registered: " + request.getUsername());
+        if (userRepository.existsByUsernameAndAccountStatus(request.getUsername(), AccountStatus.ACTIVE)) {
+            throw new UserAlreadyExistsException("Username already taken: " + request.getUsername());
         }
 
-        // Create user
+        userRepository.findByEmail(request.getEmail()).ifPresent(userRepository::delete);
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
 
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
 
-        walletService.createWalletForUser(savedUser);
+        otpService.generateAndSendOtp(request.getEmail());
 
-        String token = jwtService.generateToken(savedUser);
-
-        AuthResponse response = new AuthResponse();
-        response.setAccessToken(token);
-        response.setTokenType(BEARER);
-        response.setExpiresIn(86400); // or jwtExpiration
-        response.setEmail(savedUser.getEmail());
-        response.setUsername(savedUser.getDisplayName());
-
-        return response;
-
+        return new OtpResponse(
+                "OTP sent to " + request.getEmail() + ". Please verify within 10 minutes.",
+                request.getEmail()
+        );
     }
 
+    @Override
+    @Transactional
+    public AuthResponse verifyOtpAndActivate(VerifyOtpRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No pending registration found for: " + request.getEmail()));
+
+        if (user.getAccountStatus() != AccountStatus.PENDING) {
+            throw new InvalidOtpException("Account is already verified. Please login.");
+        }
+
+        otpService.validateOtp(request.getEmail(), request.getOtp());
+
+        user.setEnabled(true);
+        user.setAccountStatus(AccountStatus.ACTIVE);
+        userRepository.save(user);
+
+        otpService.clearOtp(request.getEmail());
+
+        walletService.createWalletForUser(user);
+
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(
+                token,
+                86400000L,
+                user.getEmail(),
+                user.getDisplayName()
+        );
+    }
 }

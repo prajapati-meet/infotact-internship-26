@@ -1,6 +1,6 @@
 package com.payment.ledger.entity;
 
-import com.payment.ledger.enums.Role;
+import com.payment.ledger.enums.*;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,6 +39,10 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false, length = 20, columnDefinition = "varchar(20) default 'PENDING'")
+    private AccountStatus accountStatus;
+
     @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -75,11 +79,11 @@ public class User implements UserDetails {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-
-        this.enabled = true;
+        this.enabled = false;
         this.accountLocked = false;
         this.failedLoginAttempts = 0;
         this.credentialsExpiryDate = LocalDateTime.now().plusDays(PASSWORD_VALIDITY_DAYS);
+        this.accountStatus = AccountStatus.PENDING;
     }
 
     @PreUpdate
@@ -161,6 +165,9 @@ public class User implements UserDetails {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public AccountStatus getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(AccountStatus accountStatus) { this.accountStatus = accountStatus; }
 
     public Wallet getWallet() { return wallet; }
     public void setWallet(Wallet wallet) { this.wallet = wallet; }

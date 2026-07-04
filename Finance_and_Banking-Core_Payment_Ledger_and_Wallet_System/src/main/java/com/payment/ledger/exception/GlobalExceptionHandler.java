@@ -15,6 +15,7 @@ import org.springframework.security.authentication.CredentialsExpiredException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import com.payment.ledger.exception.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -169,6 +170,16 @@ public class GlobalExceptionHandler {
                 "Password has expired. Please reset your password.",
                 null
         );
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOtp(InvalidOtpException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(OtpExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleOtpExpired(OtpExpiredException ex) {
+        return buildErrorResponse(HttpStatus.GONE, ex.getMessage(), null);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
