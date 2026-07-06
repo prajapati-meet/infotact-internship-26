@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser,FaEnvelope,FaLock,FaEye,FaEyeSlash,} from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -11,30 +19,36 @@ const RegisterPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
 
-    setLoading(true);
-    setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      console.log({
-        username,
-        email,
-        password,
-      });
+  setLoading(true);
+  setError("");
+  setFieldErrors({});
 
-      // TODO: API Call
+  try {
+    const response = await register(username, email, password);
 
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log(response.data); // Should print the OtpResponse
+
+    // Navigate to OTP verification page
+    navigate("/verify-otp", {
+      state: { email },
+    });
+  } catch (err) {
+    console.error(err);
+
+    setError(
+      err.response?.data?.message || "Registration failed."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const inputContainer = {
     display: "flex",
@@ -44,7 +58,7 @@ const RegisterPage = () => {
     borderRadius: "40px",
     height: "65px",
     padding: "0 20px",
-    marginBottom: "20px",
+    marginBottom: "10px",
   };
 
   const inputStyle = {
@@ -124,80 +138,79 @@ const RegisterPage = () => {
           <form onSubmit={handleSubmit}>
             {/* Username */}
             <div style={inputContainer}>
-              <FaUser
-                style={{
-                  color: "#ffffff",
-                  fontSize: "20px",
-                }}
-              />
+              <FaUser color="#fff" size={20} />
 
               <input
                 type="text"
                 placeholder="Enter your Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required
                 style={inputStyle}
+                required
               />
             </div>
+
+            {fieldErrors.username && (
+              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+                {fieldErrors.username}
+              </p>
+            )}
 
             {/* Email */}
             <div style={inputContainer}>
-              <FaEnvelope
-                style={{
-                  color: "#ffffff",
-                  fontSize: "20px",
-                }}
-              />
+              <FaEnvelope color="#fff" size={20} />
 
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 style={inputStyle}
+                required
               />
             </div>
 
+            {fieldErrors.email && (
+              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+                {fieldErrors.email}
+              </p>
+            )}
+
             {/* Password */}
             <div style={inputContainer}>
-              <FaLock
-                style={{
-                  color: "#ffffff",
-                  fontSize: "20px",
-                }}
-              />
+              <FaLock color="#fff" size={20} />
 
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder="Enter your Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 style={inputStyle}
+                required
               />
 
               {showPassword ? (
                 <FaEyeSlash
+                  color="#fff"
+                  size={20}
+                  style={{ cursor: "pointer" }}
                   onClick={() => setShowPassword(false)}
-                  style={{
-                    color: "#ffffff",
-                    fontSize: "20px",
-                    cursor: "pointer",
-                  }}
                 />
               ) : (
                 <FaEye
+                  color="#fff"
+                  size={20}
+                  style={{ cursor: "pointer" }}
                   onClick={() => setShowPassword(true)}
-                  style={{
-                    color: "#ffffff",
-                    fontSize: "20px",
-                    cursor: "pointer",
-                  }}
                 />
               )}
             </div>
+
+            {fieldErrors.password && (
+              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+                {fieldErrors.password}
+              </p>
+            )}
 
             <button
               type="submit"
