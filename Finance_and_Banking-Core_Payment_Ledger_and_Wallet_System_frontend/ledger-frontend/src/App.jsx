@@ -1,35 +1,42 @@
-import React from 'react'
-import RegisterPage from './pages/RegisterPage.jsx'
 
-const App = () => {
-  return (
-    <div>App
-      <RegisterPage/>
-    </div>
-  )
-}
+import { Routes, Route } from "react-router-dom";
 
-export default App
-
-// we need follow these method deepika
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
-import RegisterPage from "./pages/RegisterPage.jsx";
-import TransferPage from "./pages/TransferPage.jsx";
-
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
+import TransferPage from "./pages/TransferPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
+      <Navbar />
+
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
-         <Route path="/dashboard" element={<DashboardPage />} />
-         <Route path="/register" element={<RegisterPage />} />
-          <Route path="/transfer" element={<TransferPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/transfer"
+          element={
+            <ProtectedRoute>
+              <TransferPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
 
