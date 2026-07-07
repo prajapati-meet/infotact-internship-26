@@ -32,7 +32,7 @@ public class User implements UserDetails {
     @Column(name = "email", nullable = false, length = 100)
     private String email;
 
-    @Column(name = "passwordHash", nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -43,10 +43,10 @@ public class User implements UserDetails {
     @Column(name = "account_status", nullable = false, length = 20, columnDefinition = "varchar(20) default 'PENDING'")
     private AccountStatus accountStatus;
 
-    @Column(name = "createdAt", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt", nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(name = "enabled", nullable = false, columnDefinition = "boolean default true")
@@ -58,13 +58,13 @@ public class User implements UserDetails {
     @Column(name = "failed_login_attempts", nullable = false, columnDefinition = "integer default 0")
     private int failedLoginAttempts;
 
-    @Column(name = "lockedUntil")
+    @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
 
-    @Column(name = "accountExpiryDate")
+    @Column(name = "account_expiry_date")
     private LocalDateTime accountExpiryDate;
 
-    @Column(name = "credentialsExpiryDate")
+    @Column(name = "credentials_expiry_date")
     private LocalDateTime credentialsExpiryDate;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
