@@ -7,6 +7,8 @@ import DashboardPage from "./pages/DashboardPage";
 import TransferPage from "./pages/TransferPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
+import OtpVerificationPage from "./pages/OtpVerificationPage";
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-otp" element={<OtpVerificationPage />} />
 
         <Route
           path="/dashboard"

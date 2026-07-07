@@ -23,16 +23,13 @@ export function AuthProvider({ children }) {
     }
 
     // Calls the EXISTING /api/auth/register endpoint.
-    async function register(username, email, password) {
-        const response = await axiosInstance.post('/auth/register', { username, email, password });
-        const { accessToken, username: returnedUsername, email: returnedEmail } = response.data;
-
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('username', returnedUsername);
-        localStorage.setItem('email', returnedEmail);
-
-        setUser({ username: returnedUsername, email: returnedEmail });
-    }
+ async function register(username, email, password) {
+     return await axiosInstance.post("/auth/register/initiate", {
+         username,
+         email,
+         password,
+     });
+ }
 
     function logout() {
         localStorage.removeItem('accessToken');

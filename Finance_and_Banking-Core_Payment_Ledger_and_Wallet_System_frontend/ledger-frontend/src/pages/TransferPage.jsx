@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
-
+import {
+  FaWallet,
+  FaMoneyBillWave,
+  FaRegStickyNote,
+  FaPaperPlane,
+} from "react-icons/fa";
 
 const TransferPage = () => {
   const navigate = useNavigate();
@@ -56,205 +61,220 @@ const TransferPage = () => {
     }
   };
 
+  const inputContainer = {
+    display: "flex",
+    alignItems: "center",
+    background: "#1f2937",
+    border: "1px solid #374151",
+    borderRadius: "40px",
+    height: "65px",
+    padding: "0 20px",
+    marginBottom: "20px",
+  };
+
+  const inputStyle = {
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    outline: "none",
+    color: "#fff",
+    fontSize: "16px",
+    marginLeft: "15px",
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f4f7fc",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <>
+      <style>{`
+        input::placeholder,
+        textarea::placeholder{
+          color:#9ca3af;
+        }
+      `}</style>
+
       <div
         style={{
-          width: "400px",
-          backgroundColor: "#fff",
-          padding: "35px",
-          borderRadius: "12px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background:
+            "linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb)",
+          fontFamily: "Arial, sans-serif",
         }}
       >
-        <h2
+        <div
           style={{
-            textAlign: "center",
-            marginBottom: "8px",
-            color: "#333",
+            width: "450px",
+            maxWidth: "90%",
+            background: "#111827",
+            borderRadius: "25px",
+            padding: "40px",
+            boxShadow: "0 15px 40px rgba(0,0,0,.4)",
           }}
         >
-          Transfer Money
-        </h2>
-
-        <p
-          style={{
-            textAlign: "center",
-            color: "#777",
-            marginBottom: "25px",
-          }}
-        >
-          Send money to another wallet
-        </p>
-
-        {error && (
-          <p
+          <h1
             style={{
-              color: "#e63946",
-              backgroundColor: "#fdeaea",
-              padding: "10px",
-              borderRadius: "6px",
-              textAlign: "center",
-              marginBottom: "15px",
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        {success && (
-          <p
-            style={{
-              color: "#2e7d32",
-              backgroundColor: "#e8f5e9",
-              padding: "10px",
-              borderRadius: "6px",
-              textAlign: "center",
-              marginBottom: "15px",
-            }}
-          >
-            {success}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "18px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "bold",
-                color: "#444",
-              }}
-            >
-              Receiver Wallet ID
-            </label>
-
-            <input
-              type="text"
-              placeholder="Enter receiver wallet ID"
-              value={receiverWalletId}
-              onChange={(e) => setReceiverWalletId(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                padding: "12px",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                fontSize: "15px",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "18px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "bold",
-                color: "#444",
-              }}
-            >
-              Amount
-            </label>
-
-            <input
-              type="number"
-              placeholder="Enter amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              min="1"
-              step="0.01"
-              style={{
-                width: "100%",
-                padding: "12px",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                fontSize: "15px",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "22px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "bold",
-                color: "#444",
-              }}
-            >
-              Description
-            </label>
-
-            <textarea
-              placeholder="Enter description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows="3"
-              style={{
-                width: "100%",
-                padding: "12px",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                fontSize: "15px",
-                boxSizing: "border-box",
-                resize: "vertical",
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: loading ? "#94a3b8" : "#2563eb",
               color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
+              textAlign: "center",
+              marginBottom: "10px",
+              fontSize: "34px",
             }}
           >
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </form>
+            Transfer Money
+          </h1>
 
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "20px",
-            color: "#555",
-          }}
-        >
-          <Link
-            to="/dashboard"
+          <p
             style={{
-              color: "#2563eb",
-              textDecoration: "none",
-              fontWeight: "bold",
+              color: "#9ca3af",
+              textAlign: "center",
+              marginBottom: "35px",
             }}
           >
-             Back to Dashboard
-          </Link>
-        </p>
+            Send money securely to another wallet
+          </p>
+
+          {error && (
+            <div
+              style={{
+                background: "#7f1d1d",
+                color: "#fff",
+                padding: "12px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                textAlign: "center",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div
+              style={{
+                background: "#14532d",
+                color: "#fff",
+                padding: "12px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                textAlign: "center",
+              }}
+            >
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div style={inputContainer}>
+              <FaWallet color="#fff" size={20} />
+
+              <input
+                type="text"
+                placeholder="Receiver Wallet ID"
+                value={receiverWalletId}
+                onChange={(e) =>
+                  setReceiverWalletId(e.target.value)
+                }
+                style={inputStyle}
+                required
+              />
+            </div>
+
+            <div style={inputContainer}>
+              <FaMoneyBillWave color="#fff" size={20} />
+
+              <input
+                type="number"
+                placeholder="Enter Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min="1"
+                step="0.01"
+                style={inputStyle}
+                required
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                background: "#1f2937",
+                border: "1px solid #374151",
+                borderRadius: "20px",
+                padding: "20px",
+                marginBottom: "20px",
+              }}
+            >
+              <FaRegStickyNote
+                color="#fff"
+                size={20}
+                style={{ marginTop: "8px" }}
+              />
+
+              <textarea
+                rows="4"
+                placeholder="Transaction Description (Optional)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={{
+                  flex: 1,
+                  marginLeft: "15px",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "#fff",
+                  resize: "none",
+                  fontSize: "16px",
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                height: "60px",
+                border: "none",
+                borderRadius: "35px",
+                background:
+                  "linear-gradient(to right,#2563eb,#3b82f6)",
+                color: "#fff",
+                fontSize: "18px",
+                fontWeight: "bold",
+                cursor: loading ? "not-allowed" : "pointer",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <FaPaperPlane />
+              {loading ? "Sending..." : "Send Money"}
+            </button>
+          </form>
+
+          <p
+            style={{
+              color: "#9ca3af",
+              textAlign: "center",
+              marginTop: "25px",
+            }}
+          >
+            <Link
+              to="/dashboard"
+              style={{
+                color: "#60a5fa",
+                textDecoration: "none",
+                fontWeight: "bold",
+              }}
+            >
+              ← Back to Dashboard
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
