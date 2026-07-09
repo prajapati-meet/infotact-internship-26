@@ -1,5 +1,3 @@
-import React from "react";
-
 const TransactionRow = ({ transaction }) => {
   const isCredit = transaction.type === "CREDIT";
 
@@ -8,15 +6,19 @@ const TransactionRow = ({ transaction }) => {
     : "-";
 
   return (
-    <tr>
-      <td style={{ padding: "12px" }}>
+    <tr
+      style={{
+        borderBottom: "1px solid #374151",
+      }}
+    >
+      <td style={{ padding: "18px", color: "#fff" }}>
         <span
           style={{
-            backgroundColor: isCredit ? "#dcfce7" : "#fee2e2",
-            color: isCredit ? "#166534" : "#991b1b",
-            padding: "4px 10px",
+            backgroundColor: isCredit ? "#14532d" : "#7f1d1d",
+            color: isCredit ? "#86efac" : "#fca5a5",
+            padding: "6px 14px",
             borderRadius: "20px",
-            fontSize: "12px",
+            fontSize: "13px",
             fontWeight: "bold",
           }}
         >
@@ -24,22 +26,34 @@ const TransactionRow = ({ transaction }) => {
         </span>
       </td>
 
-      <td style={{ padding: "12px" }}>
+      <td
+        style={{
+          padding: "18px",
+          color: "#e5e7eb",
+        }}
+      >
         {transaction.description || "-"}
       </td>
 
-      <td style={{ padding: "12px" }}>
+      <td
+        style={{
+          padding: "18px",
+          color: "#9ca3af",
+        }}
+      >
         {formattedDate}
       </td>
 
       <td
         style={{
-          padding: "12px",
+          padding: "18px",
+          textAlign: "right",
           fontWeight: "bold",
-          color: isCredit ? "green" : "red",
+          fontSize: "16px",
+          color: isCredit ? "#22c55e" : "#ef4444",
         }}
       >
-        {isCredit ? "+" : "-"}₹{transaction.amount}
+        {isCredit ? "+" : "-"} ₹{transaction.amount}
       </td>
     </tr>
   );

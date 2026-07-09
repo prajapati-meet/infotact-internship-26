@@ -27,11 +27,12 @@ public class TransferServiceImpl implements TransferService {
 
     private final WalletRepository walletRepository;
     private final LedgerService ledgerService;
+    private final NotificationService notificationService;
 
-    public TransferServiceImpl(WalletRepository walletRepository,
-                               LedgerService ledgerService) {
+    public TransferServiceImpl(WalletRepository walletRepository, LedgerService ledgerService, NotificationService notificationService) {
         this.walletRepository = walletRepository;
         this.ledgerService = ledgerService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -99,6 +100,22 @@ public class TransferServiceImpl implements TransferService {
         walletRepository.save(lockedSender);
         walletRepository.save(lockedReceiver);
 
+        // Notify sender
+        notificationService.createNotification(
+                sender,
+                "Money Sent",
+                "You sent ₹" + request.getAmount() + " successfully. New balance: ₹" + senderBalanceAfter,
+                NotificationType.INFO
+        );
+
+        // Notify receiver
+        notificationService.createNotification(
+                lockedReceiver.getUser(),
+                "Money Received",
+                "₹" + request.getAmount() + " received in your wallet. New balance: ₹" + receiverBalanceAfter,
+                NotificationType.SUCCESS
+        );
+
         String description = request.getDescription() != null
                 ? request.getDescription()
                 : "Transfer";
@@ -142,6 +159,13 @@ public class TransferServiceImpl implements TransferService {
         wallet.setBalance(balanceAfter);
         walletRepository.save(wallet);
 
+        notificationService.createNotification(
+                user,
+                "Money Received",
+                "₹" + request.getAmount() + " deposited to your wallet. New balance: ₹" + balanceAfter,
+                NotificationType.SUCCESS
+        );
+
         String description = request.getDescription() != null ? request.getDescription() : "Deposit";
 
         ledgerService.recordEntry(wallet, user, EntryType.CREDIT,
@@ -177,6 +201,13 @@ public class TransferServiceImpl implements TransferService {
 
         wallet.setBalance(balanceAfter);
         walletRepository.save(wallet);
+
+        notificationService.createNotification(
+                user,
+                "Money Withdrawn",
+                "₹" + request.getAmount() + " withdrawn from your wallet. New balance: ₹" + balanceAfter,
+                NotificationType.INFO
+        );
 
         String description = request.getDescription() != null ? request.getDescription() : "Withdrawal";
 

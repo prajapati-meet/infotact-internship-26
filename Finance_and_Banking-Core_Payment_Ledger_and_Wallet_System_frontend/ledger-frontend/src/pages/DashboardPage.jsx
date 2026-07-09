@@ -6,7 +6,7 @@ import TransactionRow from "../components/TransactionRow";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -27,9 +27,9 @@ const DashboardPage = () => {
         setWallet(walletResponse.data);
         setTransactions(transactionResponse.data);
       } catch (err) {
+        console.error(err);
         setError(
-          err.response?.data?.message ||
-            "Failed to load dashboard."
+          err.response?.data?.message || "Failed to load dashboard."
         );
       } finally {
         setLoading(false);
@@ -38,11 +38,6 @@ const DashboardPage = () => {
 
     fetchDashboard();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   if (loading) {
     return (
@@ -63,98 +58,169 @@ const DashboardPage = () => {
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "40px auto",
-        padding: "20px",
+        minHeight: "100vh",
+        background: "linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb)",
+        padding: "40px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <h1>Dashboard</h1>
-
-      <h3>Welcome, {user?.username}</h3>
-
       <div
         style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "20px",
-          marginTop: "20px",
-          marginBottom: "20px",
+          maxWidth: "1100px",
+          margin: "0 auto",
         }}
       >
-        <h2>Wallet Details</h2>
-
-        <p>
-          <strong>Balance:</strong> ₹{wallet?.balance}
-        </p>
-
-        <p>
-          <strong>Status:</strong> {wallet?.status}
-        </p>
-      </div>
-
-      <div style={{ marginBottom: "25px" }}>
-        <button
-          onClick={() => navigate("/send-money")}
+        <h1
           style={{
-            padding: "10px 20px",
-            marginRight: "10px",
+            color: "#fff",
+            marginBottom: "10px",
+            fontSize: "38px",
+          }}
+        >
+          Dashboard
+        </h1>
+
+        <p
+          style={{
+            color: "#cbd5e1",
+            marginBottom: "30px",
+            fontSize: "18px",
+          }}
+        >
+          Welcome back,
+          <span
+            style={{
+              color: "#60a5fa",
+              fontWeight: "bold",
+              marginLeft: "6px",
+            }}
+          >
+            {user?.username}
+          </span>
+        </p>
+
+        <div
+          style={{
+            background: "#111827",
+            borderRadius: "20px",
+            padding: "30px",
+            boxShadow: "0 15px 35px rgba(0,0,0,.35)",
+            marginBottom: "30px",
+          }}
+        >
+          <h2 style={{ color: "#fff", marginBottom: "25px" }}>
+            💳 Wallet
+          </h2>
+
+          <h1
+            style={{
+              color: "#60a5fa",
+              fontSize: "45px",
+              margin: 0,
+            }}
+          >
+            ₹{wallet?.balance}
+          </h1>
+
+          <p
+            style={{
+              color: "#9ca3af",
+              marginTop: "12px",
+              fontSize: "17px",
+            }}
+          >
+            Status:
+            <span
+              style={{
+                color: "#22c55e",
+                marginLeft: "8px",
+                fontWeight: "bold",
+              }}
+            >
+              {wallet?.status}
+            </span>
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigate("/transfer")}
+          style={{
+            background: "linear-gradient(to right,#2563eb,#3b82f6)",
+            border: "none",
+            color: "#fff",
+            padding: "15px 30px",
+            borderRadius: "35px",
             cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "17px",
+            marginBottom: "35px",
           }}
         >
           Send Money
         </button>
 
-        <button
-          onClick={handleLogout}
+        <div
           style={{
-            padding: "10px 20px",
-            cursor: "pointer",
+            background: "#111827",
+            borderRadius: "20px",
+            padding: "30px",
+            boxShadow: "0 15px 35px rgba(0,0,0,.35)",
           }}
         >
-          Logout
-        </button>
+          <h2
+            style={{
+              color: "#fff",
+              marginBottom: "25px",
+            }}
+          >
+            Transaction History
+          </h2>
+
+          {transactions.length === 0 ? (
+            <p style={{ color: "#9ca3af" }}>
+              No transactions found.
+            </p>
+          ) : (
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                color: "#fff",
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  <th style={{ padding: "15px", textAlign: "left" }}>
+                    Type
+                  </th>
+                  <th style={{ padding: "15px", textAlign: "left" }}>
+                    Description
+                  </th>
+                  <th style={{ padding: "15px", textAlign: "left" }}>
+                    Date
+                  </th>
+                  <th style={{ padding: "15px", textAlign: "right" }}>
+                    Amount
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {transactions.map((transaction) => (
+                  <TransactionRow
+                    key={transaction.id}
+                    transaction={transaction}
+                  />
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
-
-      <h2>Transaction History</h2>
-
-      {transactions.length === 0 ? (
-        <p>No transactions found.</p>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "20px",
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
-                Type
-              </th>
-              <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
-                Description
-              </th>
-              <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
-                Date
-              </th>
-              <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
-                Amount
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {transactions.map((transaction) => (
-              <TransactionRow
-                key={transaction.id}
-                transaction={transaction}
-              />
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 };
