@@ -9,6 +9,7 @@ import com.payment.ledger.exception.NotificationNotFoundException;
 import com.payment.ledger.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,13 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setMessage(message);
         notification.setType(type);
         notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void createNotificationInNewTransaction(User user, String title,
+                                                   String message, NotificationType type) {
+        createNotification(user, title, message, type);
     }
 
     @Override
