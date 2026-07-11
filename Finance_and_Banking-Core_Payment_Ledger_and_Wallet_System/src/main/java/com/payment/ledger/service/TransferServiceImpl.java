@@ -16,6 +16,7 @@ import com.payment.ledger.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import com.payment.ledger.enums.NotificationType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,105 +39,125 @@ public class TransferServiceImpl implements TransferService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public TransferResponse transfer(User sender, TransferRequest request) {
+        try {
+            if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new InvalidTransferException("Transfer amount must be greater than zero");
+            }
 
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidTransferException("Transfer amount must be greater than zero");
+            Wallet senderWallet = walletRepository.findByUser(sender)
+                    .orElseThrow(() -> new WalletNotFoundException(
+                            "Sender wallet not found for user: " + sender.getEmail()));
+
+            if (senderWallet.getStatus() != WalletStatus.ACTIVE) {
+                throw new InvalidTransferException("Sender wallet is not active");
+            }
+
+            if (senderWallet.getId().equals(request.getReceiverWalletId())) {
+                throw new InvalidTransferException("Cannot transfer to your own wallet");
+            }
+
+            if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
+                throw new InsufficientBalanceException(
+                        "Insufficient balance. Available: " + senderWallet.getBalance() +
+                                ", Required: " + request.getAmount());
+            }
+
+            UUID firstLockId  = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
+                    ? senderWallet.getId()
+                    : request.getReceiverWalletId();
+            UUID secondLockId = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
+                    ? request.getReceiverWalletId()
+                    : senderWallet.getId();
+
+            Wallet firstWallet = walletRepository.findByIdWithLock(firstLockId)
+                    .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + firstLockId));
+            Wallet secondWallet = walletRepository.findByIdWithLock(secondLockId)
+                    .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + secondLockId));
+
+            Wallet lockedSender   = firstWallet.getId().equals(senderWallet.getId()) ? firstWallet : secondWallet;
+            Wallet lockedReceiver = firstWallet.getId().equals(senderWallet.getId()) ? secondWallet : firstWallet;
+
+            if (lockedReceiver.getStatus() != WalletStatus.ACTIVE) {
+                throw new InvalidTransferException("Receiver wallet is not active");
+            }
+
+            if (lockedSender.getBalance().compareTo(request.getAmount()) < 0) {
+                throw new InsufficientBalanceException(
+                        "Insufficient balance. Available: " + lockedSender.getBalance() +
+                                ", Required: " + request.getAmount());
+            }
+
+            String referenceId = UUID.randomUUID().toString();
+
+            BigDecimal senderBalanceBefore   = lockedSender.getBalance();
+            BigDecimal receiverBalanceBefore = lockedReceiver.getBalance();
+
+            BigDecimal senderBalanceAfter   = senderBalanceBefore.subtract(request.getAmount());
+            BigDecimal receiverBalanceAfter = receiverBalanceBefore.add(request.getAmount());
+
+            lockedSender.setBalance(senderBalanceAfter);
+            lockedReceiver.setBalance(receiverBalanceAfter);
+
+            walletRepository.save(lockedSender);
+            walletRepository.save(lockedReceiver);
+
+            // Notify sender
+            notificationService.createNotification(
+                    sender,
+                    "Money Sent",
+                    "You sent ₹" + request.getAmount() + " successfully. New balance: ₹" + senderBalanceAfter,
+                    NotificationType.INFO
+            );
+
+            // Notify receiver
+            notificationService.createNotification(
+                    lockedReceiver.getUser(),
+                    "Money Received",
+                    "₹" + request.getAmount() + " received in your wallet. New balance: ₹" + receiverBalanceAfter,
+                    NotificationType.SUCCESS
+            );
+
+            String description = request.getDescription() != null
+                    ? request.getDescription()
+                    : "Transfer";
+
+            ledgerService.recordEntry(lockedSender, sender, EntryType.DEBIT,
+                    request.getAmount(), senderBalanceBefore, senderBalanceAfter,
+                    referenceId, description);
+
+            ledgerService.recordEntry(lockedReceiver, lockedReceiver.getUser(), EntryType.CREDIT,
+                    request.getAmount(), receiverBalanceBefore, receiverBalanceAfter,
+                    referenceId, description);
+
+            return new TransferResponse(
+                    referenceId,
+                    lockedSender.getId(),
+                    lockedReceiver.getId(),
+                    request.getAmount(),
+                    senderBalanceAfter,
+                    description,
+                    LocalDateTime.now()
+            );
+        } catch (Exception ex) {
+            if (ex instanceof InsufficientBalanceException ||
+                ex instanceof InvalidTransferException ||
+                ex instanceof WalletNotFoundException) {
+                
+                String amountStr = request.getAmount() != null ? "₹" + request.getAmount() : "funds";
+                try {
+                    notificationService.createNotificationInNewTransaction(
+                        sender,
+                        "Transaction Failed",
+                        "Your transfer of " + amountStr + " failed: " + ex.getMessage(),
+                        NotificationType.ERROR
+                    );
+                } catch (Exception notificationEx) {
+                    // Log notification failure but do not swallow the original transfer exception
+                    System.err.println("Failed to log transaction failure notification: " + notificationEx.getMessage());
+                }
+            }
+            throw ex;
         }
-
-        Wallet senderWallet = walletRepository.findByUser(sender)
-                .orElseThrow(() -> new WalletNotFoundException(
-                        "Sender wallet not found for user: " + sender.getEmail()));
-
-        if (senderWallet.getStatus() != WalletStatus.ACTIVE) {
-            throw new InvalidTransferException("Sender wallet is not active");
-        }
-
-        if (senderWallet.getId().equals(request.getReceiverWalletId())) {
-            throw new InvalidTransferException("Cannot transfer to your own wallet");
-        }
-
-        if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InsufficientBalanceException(
-                    "Insufficient balance. Available: " + senderWallet.getBalance() +
-                            ", Required: " + request.getAmount());
-        }
-
-        UUID firstLockId  = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
-                ? senderWallet.getId()
-                : request.getReceiverWalletId();
-        UUID secondLockId = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
-                ? request.getReceiverWalletId()
-                : senderWallet.getId();
-
-        Wallet firstWallet = walletRepository.findByIdWithLock(firstLockId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + firstLockId));
-        Wallet secondWallet = walletRepository.findByIdWithLock(secondLockId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + secondLockId));
-
-        Wallet lockedSender   = firstWallet.getId().equals(senderWallet.getId()) ? firstWallet : secondWallet;
-        Wallet lockedReceiver = firstWallet.getId().equals(senderWallet.getId()) ? secondWallet : firstWallet;
-
-        if (lockedReceiver.getStatus() != WalletStatus.ACTIVE) {
-            throw new InvalidTransferException("Receiver wallet is not active");
-        }
-
-        if (lockedSender.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InsufficientBalanceException(
-                    "Insufficient balance. Available: " + lockedSender.getBalance() +
-                            ", Required: " + request.getAmount());
-        }
-
-        String referenceId = UUID.randomUUID().toString();
-
-        BigDecimal senderBalanceBefore   = lockedSender.getBalance();
-        BigDecimal receiverBalanceBefore = lockedReceiver.getBalance();
-
-        BigDecimal senderBalanceAfter   = senderBalanceBefore.subtract(request.getAmount());
-        BigDecimal receiverBalanceAfter = receiverBalanceBefore.add(request.getAmount());
-
-        lockedSender.setBalance(senderBalanceAfter);
-        lockedReceiver.setBalance(receiverBalanceAfter);
-
-        walletRepository.save(lockedSender);
-        walletRepository.save(lockedReceiver);
-
-        // Notify sender
-        notificationService.createNotification(
-                sender,
-                "Money Sent",
-                "You sent ₹" + request.getAmount() + " successfully. New balance: ₹" + senderBalanceAfter,
-                NotificationType.INFO
-        );
-
-        // Notify receiver
-        notificationService.createNotification(
-                lockedReceiver.getUser(),
-                "Money Received",
-                "₹" + request.getAmount() + " received in your wallet. New balance: ₹" + receiverBalanceAfter,
-                NotificationType.SUCCESS
-        );
-
-        String description = request.getDescription() != null
-                ? request.getDescription()
-                : "Transfer";
-
-        ledgerService.recordEntry(lockedSender, sender, EntryType.DEBIT,
-                request.getAmount(), senderBalanceBefore, senderBalanceAfter,
-                referenceId, description);
-
-        ledgerService.recordEntry(lockedReceiver, lockedReceiver.getUser(), EntryType.CREDIT,
-                request.getAmount(), receiverBalanceBefore, receiverBalanceAfter,
-                referenceId, description);
-
-        return new TransferResponse(
-                referenceId,
-                lockedSender.getId(),
-                lockedReceiver.getId(),
-                request.getAmount(),
-                senderBalanceAfter,
-                description,
-                LocalDateTime.now()
-        );
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)

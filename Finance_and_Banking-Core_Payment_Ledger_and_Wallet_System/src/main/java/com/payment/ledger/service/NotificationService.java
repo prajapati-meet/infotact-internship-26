@@ -12,6 +12,7 @@ public interface NotificationService {
 
     // Internal — called by other services to create notifications
     void createNotification(User user, String title, String message, NotificationType type);
+    void createNotificationInNewTransaction(User user, String title, String message, NotificationType type);
 
     // External — called by controller
     List<NotificationResponse> getAllNotifications(User user);

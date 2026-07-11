@@ -18,8 +18,9 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final NotificationService notificationService;
 
-    public WalletServiceImpl(WalletRepository walletRepository) {
+    public WalletServiceImpl(WalletRepository walletRepository,NotificationService notificationService) {
         this.walletRepository = walletRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
