@@ -1,4 +1,6 @@
-const TransactionRow = ({ transaction }) => {
+import { getCurrencySymbol } from "../utils/currency";
+
+const TransactionRow = ({ transaction, currency = "INR" }) => {
   const isCredit = transaction.type === "CREDIT";
 
   const formattedDate = transaction.timestamp
@@ -6,54 +8,31 @@ const TransactionRow = ({ transaction }) => {
     : "-";
 
   return (
-    <tr
-      style={{
-        borderBottom: "1px solid #374151",
-      }}
-    >
-      <td style={{ padding: "18px", color: "#fff" }}>
-        <span
-          style={{
-            backgroundColor: isCredit ? "#14532d" : "#7f1d1d",
-            color: isCredit ? "#86efac" : "#fca5a5",
-            padding: "6px 14px",
-            borderRadius: "20px",
-            fontSize: "13px",
-            fontWeight: "bold",
-          }}
-        >
+    <tr>
+      <td style={{ padding: "18px 24px" }}>
+        <span className={`badge ${isCredit ? "badge-success" : "badge-danger"}`}>
           {transaction.type}
         </span>
       </td>
 
-      <td
-        style={{
-          padding: "18px",
-          color: "#e5e7eb",
-        }}
-      >
+      <td style={{ padding: "18px 24px", color: "var(--color-text-main)", fontWeight: "500" }}>
         {transaction.description || "-"}
       </td>
 
-      <td
-        style={{
-          padding: "18px",
-          color: "#9ca3af",
-        }}
-      >
+      <td style={{ padding: "18px 24px", color: "var(--color-text-light)" }}>
         {formattedDate}
       </td>
 
       <td
         style={{
-          padding: "18px",
+          padding: "18px 24px",
           textAlign: "right",
-          fontWeight: "bold",
+          fontWeight: "700",
           fontSize: "16px",
-          color: isCredit ? "#22c55e" : "#ef4444",
+          color: isCredit ? "var(--color-success)" : "var(--color-danger)",
         }}
       >
-        {isCredit ? "+" : "-"} ₹{transaction.amount}
+        {isCredit ? "+" : "-"} {getCurrencySymbol(currency)}{transaction.amount}
       </td>
     </tr>
   );

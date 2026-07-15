@@ -7,4 +7,6 @@ public interface OtpService
     public void validateOtp(String email, String otp);
 
     public void clearOtp(String email);
+
+    public void resendOtp(String email);
 }

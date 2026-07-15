@@ -7,6 +7,8 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
+  FaExclamationCircle,
+  FaUserPlus,
 } from "react-icons/fa";
 
 const RegisterPage = () => {
@@ -22,238 +24,175 @@ const RegisterPage = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    setLoading(true);
+    setError("");
+    setFieldErrors({});
 
-  setLoading(true);
-  setError("");
-  setFieldErrors({});
+    try {
+      const response = await register(username, email, password);
+      console.log(response.data); // Should print the OtpResponse
 
-  try {
-    const response = await register(username, email, password);
-
-    console.log(response.data); // Should print the OtpResponse
-
-    // Navigate to OTP verification page
-    navigate("/verify-otp", {
-      state: { email },
-    });
-  } catch (err) {
-    console.error(err);
-
-    setError(
-      err.response?.data?.message || "Registration failed."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const inputContainer = {
-    display: "flex",
-    alignItems: "center",
-    background: "#1f2937",
-    border: "1px solid #374151",
-    borderRadius: "40px",
-    height: "65px",
-    padding: "0 20px",
-    marginBottom: "10px",
-  };
-
-  const inputStyle = {
-    flex: 1,
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "#fff",
-    fontSize: "17px",
-    marginLeft: "15px",
+      // Navigate to OTP verification page
+      navigate("/verify-otp", {
+        state: { email, username, password },
+      });
+    } catch (err) {
+      console.error(err);
+      if (err.response?.data?.errors) {
+        setFieldErrors(err.response.data.errors);
+        const firstError = Object.values(err.response.data.errors)[0];
+        setError(firstError || "Validation failed.");
+      } else {
+        setError(
+          err.response?.data?.message || "Registration failed."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <>
-      <style>{`
-        input::placeholder{
-          color:#9ca3af;
-        }
-      `}</style>
-
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb)",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: "430px",
-            maxWidth: "90%",
-            background: "#111827",
-            borderRadius: "25px",
-            padding: "40px",
-            boxShadow: "0 15px 40px rgba(0,0,0,.4)",
-          }}
-        >
-          <h1
+    <div className="auth-layout">
+      <div className="auth-card card">
+        <div className="card-header" style={{ textAlign: "center" }}>
+          <div
             style={{
-              color: "#fff",
-              textAlign: "center",
-              marginBottom: "10px",
-              fontSize: "34px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "56px",
+              height: "56px",
+              borderRadius: "12px",
+              backgroundColor: "var(--color-primary-light)",
+              color: "var(--color-primary)",
+              marginBottom: "16px",
             }}
           >
-            Create Account
-          </h1>
+            <FaUserPlus size={28} />
+          </div>
+          <h1 className="card-title">Create Account</h1>
+          <p className="card-subtitle">Register to manage your payment ledger</p>
+        </div>
 
-          <p
-            style={{
-              textAlign: "center",
-              color: "#9ca3af",
-              marginBottom: "35px",
-            }}
-          >
-            Register to continue
-          </p>
+        {error && (
+          <div className="alert alert-danger">
+            <FaExclamationCircle className="alert-icon" />
+            <div>{error}</div>
+          </div>
+        )}
 
-          {error && (
-            <div
-              style={{
-                background: "#7f1d1d",
-                color: "#fff",
-                padding: "12px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            {/* Username */}
-            <div style={inputContainer}>
-              <FaUser color="#fff" size={20} />
-
+        <form onSubmit={handleSubmit}>
+          {/* Username */}
+          <div className="form-group">
+            <label className="form-label">Username</label>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaUser />
+              </span>
               <input
                 type="text"
                 placeholder="Enter your Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                style={inputStyle}
+                className="input-control"
                 required
               />
             </div>
-
             {fieldErrors.username && (
-              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+              <p style={{ color: "var(--color-danger)", fontSize: "13px", marginTop: "6px" }}>
                 {fieldErrors.username}
               </p>
             )}
+          </div>
 
-            {/* Email */}
-            <div style={inputContainer}>
-              <FaEnvelope color="#fff" size={20} />
-
+          {/* Email */}
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaEnvelope />
+              </span>
               <input
                 type="email"
-                placeholder="Enter your Email"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={inputStyle}
+                className="input-control"
                 required
               />
             </div>
-
             {fieldErrors.email && (
-              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+              <p style={{ color: "var(--color-danger)", fontSize: "13px", marginTop: "6px" }}>
                 {fieldErrors.email}
               </p>
             )}
+          </div>
 
-            {/* Password */}
-            <div style={inputContainer}>
-              <FaLock color="#fff" size={20} />
-
+          {/* Password */}
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaLock />
+              </span>
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your Password"
+                placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={inputStyle}
+                className="input-control"
                 required
               />
-
-              {showPassword ? (
-                <FaEyeSlash
-                  color="#fff"
-                  size={20}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowPassword(false)}
-                />
-              ) : (
-                <FaEye
-                  color="#fff"
-                  size={20}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowPassword(true)}
-                />
-              )}
+              <span
+                className="input-icon"
+                style={{ cursor: "pointer", marginLeft: "8px" }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
-
             {fieldErrors.password && (
-              <p style={{ color: "#ef4444", marginBottom: "15px" }}>
+              <p style={{ color: "var(--color-danger)", fontSize: "13px", marginTop: "6px" }}>
                 {fieldErrors.password}
               </p>
             )}
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                height: "60px",
-                border: "none",
-                borderRadius: "35px",
-                background: "linear-gradient(to right,#2563eb,#3b82f6)",
-                color: "#fff",
-                fontSize: "18px",
-                fontWeight: "bold",
-                cursor: loading ? "not-allowed" : "pointer",
-                marginTop: "10px",
-              }}
-            >
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary btn-block"
+            style={{ marginTop: "8px", height: "52px" }}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-          <p
+        <p
+          style={{
+            color: "var(--color-text-light)",
+            textAlign: "center",
+            marginTop: "24px",
+            fontSize: "14px",
+          }}
+        >
+          Already have an account?{" "}
+          <Link
+            to="/login"
             style={{
-              color: "#9ca3af",
-              textAlign: "center",
-              marginTop: "25px",
+              color: "var(--color-primary)",
+              fontWeight: "600",
             }}
           >
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              style={{
-                color: "#60a5fa",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Login
-            </Link>
-          </p>
-        </div>
+            Login
+          </Link>
+        </p>
       </div>
-    </>
+    </div>
   );
 };
 

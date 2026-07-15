@@ -37,45 +37,43 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransferResponse transfer(User sender, TransferRequest request) {
         try {
             if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new InvalidTransferException("Transfer amount must be greater than zero");
             }
 
-            Wallet senderWallet = walletRepository.findByUser(sender)
+            UUID senderWalletId = walletRepository.findIdByUser(sender)
                     .orElseThrow(() -> new WalletNotFoundException(
                             "Sender wallet not found for user: " + sender.getEmail()));
 
-            if (senderWallet.getStatus() != WalletStatus.ACTIVE) {
-                throw new InvalidTransferException("Sender wallet is not active");
+            if (!sender.isEnabled()) {
+                throw new InvalidTransferException("Your account is disabled");
             }
 
-            if (senderWallet.getId().equals(request.getReceiverWalletId())) {
+            if (senderWalletId.equals(request.getReceiverWalletId())) {
                 throw new InvalidTransferException("Cannot transfer to your own wallet");
             }
 
-            if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
-                throw new InsufficientBalanceException(
-                        "Insufficient balance. Available: " + senderWallet.getBalance() +
-                                ", Required: " + request.getAmount());
-            }
-
-            UUID firstLockId  = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
-                    ? senderWallet.getId()
+            UUID firstLockId  = senderWalletId.compareTo(request.getReceiverWalletId()) < 0
+                    ? senderWalletId
                     : request.getReceiverWalletId();
-            UUID secondLockId = senderWallet.getId().compareTo(request.getReceiverWalletId()) < 0
+            UUID secondLockId = senderWalletId.compareTo(request.getReceiverWalletId()) < 0
                     ? request.getReceiverWalletId()
-                    : senderWallet.getId();
+                    : senderWalletId;
 
             Wallet firstWallet = walletRepository.findByIdWithLock(firstLockId)
                     .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + firstLockId));
             Wallet secondWallet = walletRepository.findByIdWithLock(secondLockId)
                     .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + secondLockId));
 
-            Wallet lockedSender   = firstWallet.getId().equals(senderWallet.getId()) ? firstWallet : secondWallet;
-            Wallet lockedReceiver = firstWallet.getId().equals(senderWallet.getId()) ? secondWallet : firstWallet;
+            Wallet lockedSender   = firstWallet.getId().equals(senderWalletId) ? firstWallet : secondWallet;
+            Wallet lockedReceiver = firstWallet.getId().equals(senderWalletId) ? secondWallet : firstWallet;
+
+            if (lockedSender.getStatus() != WalletStatus.ACTIVE) {
+                throw new InvalidTransferException("Sender wallet is not active");
+            }
 
             if (lockedReceiver.getStatus() != WalletStatus.ACTIVE) {
                 throw new InvalidTransferException("Receiver wallet is not active");
@@ -160,14 +158,17 @@ public class TransferServiceImpl implements TransferService {
         }
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransferResponse deposit(User user, DepositRequest request) {
 
-        Wallet wallet = walletRepository.findByIdWithLock(
-                        walletRepository.findByUser(user)
-                                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"))
-                                .getId())
+        UUID walletId = walletRepository.findIdByUser(user)
                 .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+        Wallet wallet = walletRepository.findByIdWithLock(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (!user.isEnabled()) {
+            throw new InvalidTransferException("Your account is disabled");
+        }
 
         if (wallet.getStatus() != WalletStatus.ACTIVE) {
             throw new InvalidTransferException("Wallet is not active");
@@ -197,14 +198,17 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransferResponse withdraw(User user, WithdrawRequest request) {
 
-        Wallet wallet = walletRepository.findByIdWithLock(
-                        walletRepository.findByUser(user)
-                                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"))
-                                .getId())
+        UUID walletId = walletRepository.findIdByUser(user)
                 .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+        Wallet wallet = walletRepository.findByIdWithLock(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (!user.isEnabled()) {
+            throw new InvalidTransferException("Your account is disabled");
+        }
 
         if (wallet.getStatus() != WalletStatus.ACTIVE) {
             throw new InvalidTransferException("Wallet is not active");

@@ -8,17 +8,21 @@ public class AuthResponse {
     private long expiresIn;
     private String email;
     private String username;
+    private String role;
+    private String profilePhoto;
 
     public AuthResponse() {
         super();
     }
 
-    public AuthResponse(String accessToken, long expiresIn, String email, String username) {
+    public AuthResponse(String accessToken, long expiresIn, String email, String username, String role, String profilePhoto) {
         this.accessToken = accessToken;
         this.tokenType = "Bearer";
         this.expiresIn = expiresIn;
         this.email = email;
         this.username = username;
+        this.role = role;
+        this.profilePhoto = profilePhoto;
     }
 
     public String getAccessToken() {
@@ -59,6 +63,22 @@ public class AuthResponse {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 }
 

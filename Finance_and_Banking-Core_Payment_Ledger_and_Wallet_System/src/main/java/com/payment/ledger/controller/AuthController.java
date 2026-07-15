@@ -52,6 +52,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/register/resend-otp")
+    public ResponseEntity<OtpResponse> resendOtp(@RequestParam String email) {
+        OtpResponse response = userService.resendOtp(email);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
@@ -68,7 +74,7 @@ public class AuthController {
             String token = jwtService.generateToken(user);
 
             return ResponseEntity.ok(new AuthResponse(
-                    token, 86400000L, user.getEmail(), user.getDisplayName()
+                    token, 86400000L, user.getEmail(), user.getDisplayName(), user.getRole().name(), user.getProfilePhoto()
             ));
 
         } catch (BadCredentialsException ex) {

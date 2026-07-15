@@ -72,12 +72,12 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Should be enabled by default after entity creation lifecycle")
-    void onCreate_ShouldSetEnabledTrueByDefault() {
+    @DisplayName("Should be disabled by default after entity creation lifecycle")
+    void onCreate_ShouldSetEnabledFalseByDefault() {
         User user = new User();
         user.onCreate();
 
-        assertThat(user.isEnabled()).isTrue();
+        assertThat(user.isEnabled()).isFalse();
     }
 
     @Test

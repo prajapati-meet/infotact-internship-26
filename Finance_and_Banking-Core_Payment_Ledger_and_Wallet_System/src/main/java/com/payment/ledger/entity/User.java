@@ -166,6 +166,9 @@ public class User implements UserDetails {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
+    private String profilePhoto;
+
     public AccountStatus getAccountStatus() { return accountStatus; }
     public void setAccountStatus(AccountStatus accountStatus) { this.accountStatus = accountStatus; }
 
@@ -189,4 +192,7 @@ public class User implements UserDetails {
 
     public LocalDateTime getCredentialsExpiryDate() { return credentialsExpiryDate; }
     public void setCredentialsExpiryDate(LocalDateTime credentialsExpiryDate) { this.credentialsExpiryDate = credentialsExpiryDate; }
+
+    public String getProfilePhoto() { return profilePhoto; }
+    public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
 }

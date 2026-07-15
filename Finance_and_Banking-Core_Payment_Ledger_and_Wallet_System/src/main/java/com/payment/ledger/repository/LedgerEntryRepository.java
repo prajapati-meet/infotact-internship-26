@@ -2,6 +2,7 @@ package com.payment.ledger.repository;
 
 
 import com.payment.ledger.entity.LedgerEntry;
+import com.payment.ledger.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,6 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
     Optional<LedgerEntry> findByReferenceId(String referenceId);
 
     boolean existsByReferenceId(String referenceId);
+
+    long countByUser(User user);
 }

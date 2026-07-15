@@ -62,6 +62,21 @@ public class OtpServiceImpl implements OtpService {
         redisTemplate.delete(OTP_PREFIX + email);
     }
 
+    @Override
+    public void resendOtp(String email) {
+        String cooldownKey = "otp:cooldown:" + email;
+        Object cooldown = redisTemplate.opsForValue().get(cooldownKey);
+        if (cooldown != null) {
+            throw new InvalidOtpException("Please wait 60 seconds before requesting another OTP.");
+        }
+
+        // Generate and send new OTP
+        generateAndSendOtp(email);
+
+        // Set cooldown key for 60 seconds
+        redisTemplate.opsForValue().set(cooldownKey, "true", Duration.ofSeconds(60));
+    }
+
     private String generateOtp() {
         SecureRandom random = new SecureRandom();
         StringBuilder otp = new StringBuilder();
