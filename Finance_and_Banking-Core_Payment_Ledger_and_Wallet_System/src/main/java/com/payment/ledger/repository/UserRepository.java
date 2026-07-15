@@ -2,6 +2,8 @@ package com.payment.ledger.repository;
 
 import com.payment.ledger.entity.User;
 import com.payment.ledger.enums.AccountStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmailAndAccountStatus(String email, AccountStatus accountStatus);
     boolean existsByUsernameAndAccountStatus(String username, AccountStatus accountStatus);
+
+    long countByAccountStatus(AccountStatus accountStatus);
+    Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String username, String email, Pageable pageable);
 }

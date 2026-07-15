@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../context/AuthContext";
 import {
   FaShieldAlt,
   FaKey,
   FaArrowLeft,
   FaRedo,
+  FaExclamationCircle,
+  FaCheckCircle,
 } from "react-icons/fa";
 
 const OtpVerificationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
 
   const email = location.state?.email;
   const username = location.state?.username;
@@ -23,11 +24,21 @@ const OtpVerificationPage = () => {
     return null;
   }
 
+  const { verifyLogin } = useAuth();
+
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const handleOtpChange = (e) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -60,11 +71,17 @@ const OtpVerificationPage = () => {
         accessToken,
         username,
         email: returnedEmail,
+        role,
+        profilePhoto,
       } = response.data;
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("username", username);
       localStorage.setItem("email", returnedEmail);
+      localStorage.setItem("role", role || "USER");
+      localStorage.setItem("profilePhoto", profilePhoto || "");
+
+      verifyLogin(username, returnedEmail, role || "USER", profilePhoto || "");
 
       setSuccess("Registration completed successfully.");
 
@@ -82,18 +99,15 @@ const OtpVerificationPage = () => {
   };
 
   const handleResendOtp = async () => {
+    if (cooldown > 0) return;
     setError("");
     setSuccess("");
     setResendLoading(true);
 
     try {
-      await axiosInstance.post("/auth/register/initiate", {
-        username,
-        email,
-        password,
-      });
-
+      await axiosInstance.post(`/auth/register/resend-otp?email=${encodeURIComponent(email)}`);
       setSuccess("OTP has been sent again.");
+      setCooldown(60);
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -104,203 +118,109 @@ const OtpVerificationPage = () => {
     }
   };
 
-  const inputContainer = {
-    display: "flex",
-    alignItems: "center",
-    background: "#1f2937",
-    border: "1px solid #374151",
-    borderRadius: "40px",
-    height: "65px",
-    padding: "0 20px",
-    marginBottom: "25px",
-  };
-
-  const inputStyle = {
-    flex: 1,
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "#fff",
-    fontSize: "22px",
-    textAlign: "center",
-    letterSpacing: "10px",
-    marginLeft: "15px",
-  };
-
   return (
-    <>
-      <style>{`
-        input::placeholder{
-          color:#9ca3af;
-        }
-      `}</style>
-
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background:
-            "linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb)",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: "430px",
-            maxWidth: "90%",
-            background: "#111827",
-            borderRadius: "25px",
-            padding: "40px",
-            boxShadow: "0 15px 40px rgba(0,0,0,.4)",
-          }}
-        >
+    <div className="auth-layout">
+      <div className="auth-card card">
+        <div className="card-header" style={{ textAlign: "center" }}>
           <div
             style={{
-              display: "flex",
+              display: "inline-flex",
+              alignItems: "center",
               justifyContent: "center",
-              marginBottom: "15px",
+              width: "56px",
+              height: "56px",
+              borderRadius: "12px",
+              backgroundColor: "var(--color-primary-light)",
+              color: "var(--color-primary)",
+              marginBottom: "16px",
             }}
           >
-            <FaShieldAlt size={55} color="#60a5fa" />
+            <FaShieldAlt size={28} />
           </div>
-
-          <h2
-            style={{
-              color: "#fff",
-              textAlign: "center",
-              marginBottom: "25px",
-            }}
-          >
-            Verify OTP
-          </h2>
-
-          <p
-            style={{
-              textAlign: "center",
-              color: "#9ca3af",
-              marginBottom: "35px",
-              lineHeight: "1.6",
-            }}
-          >
-            Enter the 6-digit OTP sent to
+          <h1 className="card-title">Verify OTP</h1>
+          <p className="card-subtitle">
+            Enter the 6-digit verification code sent to
             <br />
-            <strong style={{ color: "#fff" }}>{email}</strong>
+            <strong style={{ color: "var(--color-text-main)" }}>{email}</strong>
           </p>
+        </div>
 
-          {error && (
-            <div
-              style={{
-                background: "#7f1d1d",
-                color: "#fff",
-                padding: "12px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="alert alert-danger">
+            <FaExclamationCircle className="alert-icon" />
+            <div>{error}</div>
+          </div>
+        )}
 
-          {success && (
-            <div
-              style={{
-                background: "#14532d",
-                color: "#fff",
-                padding: "12px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {success}
-            </div>
-          )}
+        {success && (
+          <div className="alert alert-success">
+            <FaCheckCircle className="alert-icon" />
+            <div>{success}</div>
+          </div>
+        )}
 
-          <form onSubmit={handleVerify}>
-            <div style={inputContainer}>
-              <FaKey color="#fff" size={20} />
-
+        <form onSubmit={handleVerify}>
+          <div className="form-group">
+            <label className="form-label" style={{ textAlign: "center" }}>Verification Code</label>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaKey />
+              </span>
               <input
                 type="text"
                 value={otp}
                 onChange={handleOtpChange}
                 placeholder="000000"
                 maxLength={6}
-                style={inputStyle}
+                className="input-control input-control-otp"
+                required
               />
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                height: "60px",
-                border: "none",
-                borderRadius: "35px",
-                background:
-                  "linear-gradient(to right,#2563eb,#3b82f6)",
-                color: "#fff",
-                fontSize: "18px",
-                fontWeight: "bold",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading ? "Verifying..." : "Verify OTP"}
-            </button>
-          </form>
+          </div>
 
           <button
-            onClick={handleResendOtp}
-            disabled={resendLoading}
-            style={{
-              width: "100%",
-              height: "60px",
-              border: "1px solid #3b82f6",
-              borderRadius: "35px",
-              background: "transparent",
-              color: "#60a5fa",
-              fontSize: "17px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginTop: "15px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-            }}
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary btn-block"
+            style={{ height: "52px" }}
           >
-            <FaRedo />
-            {resendLoading ? "Resending..." : "Resend OTP"}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
+        </form>
 
-          <div
+        <button
+          onClick={handleResendOtp}
+          disabled={resendLoading || cooldown > 0}
+          className="btn btn-secondary btn-block"
+          style={{ marginTop: "12px", height: "52px" }}
+        >
+          <FaRedo size={12} />
+          {resendLoading ? "Resending..." : cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
+        </button>
+
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "24px",
+          }}
+        >
+          <Link
+            to="/register"
             style={{
-              textAlign: "center",
-              marginTop: "25px",
+              color: "var(--color-primary)",
+              fontWeight: "600",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
             }}
           >
-            <Link
-              to="/register"
-              style={{
-                color: "#60a5fa",
-                textDecoration: "none",
-                fontWeight: "bold",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <FaArrowLeft />
-              Back to Register
-            </Link>
-          </div>
+            <FaArrowLeft size={12} />
+            Back to Register
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

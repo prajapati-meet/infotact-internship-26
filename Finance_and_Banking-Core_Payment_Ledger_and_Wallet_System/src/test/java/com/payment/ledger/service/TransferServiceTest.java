@@ -41,6 +41,9 @@ class TransferServiceTest {
     @Mock
     private LedgerService ledgerService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private TransferServiceImpl transferService;
 
@@ -57,6 +60,9 @@ class TransferServiceTest {
 
         sender = new User();
         receiver = new User();
+
+        sender.setEnabled(true);
+        receiver.setEnabled(true);
 
         sender.setEmail("sender@test.com");
         receiver.setEmail("receiver@test.com");
@@ -79,12 +85,12 @@ class TransferServiceTest {
         request.setDescription("Test Transfer");
     }
 
- @Test
-@DisplayName("Transfer should succeed  with a valid request")
-   void transfer_WithValidRequest_ShouldSucceed(){
+    @Test
+    @DisplayName("Transfer should succeed with a valid request")
+    void transfer_WithValidRequest_ShouldSucceed() {
 
-        when(walletRepository.findByUser(sender))
-                .thenReturn(Optional.of(senderWallet));
+        when(walletRepository.findIdByUser(sender))
+                .thenReturn(Optional.of(senderWallet.getId()));
 
         UUID firstId = senderWallet.getId().compareTo(receiverWallet.getId()) < 0
                 ? senderWallet.getId()
@@ -127,14 +133,28 @@ class TransferServiceTest {
                 );
     }
 
- @Test
- @DisplayName("Transfer should throw exception when balance is insufficient")
+    @Test
+    @DisplayName("Transfer should throw exception when balance is insufficient")
     void transfer_WithInsufficientBalance_ShouldThrowException() {
 
         senderWallet.setBalance(new BigDecimal("50"));
 
-        when(walletRepository.findByUser(sender))
-                .thenReturn(Optional.of(senderWallet));
+        when(walletRepository.findIdByUser(sender))
+                .thenReturn(Optional.of(senderWallet.getId()));
+
+        UUID firstId = senderWallet.getId().compareTo(receiverWallet.getId()) < 0
+                ? senderWallet.getId()
+                : receiverWallet.getId();
+
+        UUID secondId = senderWallet.getId().compareTo(receiverWallet.getId()) < 0
+                ? receiverWallet.getId()
+                : senderWallet.getId();
+
+        when(walletRepository.findByIdWithLock(firstId))
+                .thenReturn(Optional.of(firstId.equals(senderWallet.getId()) ? senderWallet : receiverWallet));
+
+        when(walletRepository.findByIdWithLock(secondId))
+                .thenReturn(Optional.of(secondId.equals(senderWallet.getId()) ? senderWallet : receiverWallet));
 
         assertThatThrownBy(() ->
                 transferService.transfer(sender, request))
@@ -144,14 +164,14 @@ class TransferServiceTest {
         verifyNoInteractions(ledgerService);
     }
 
- @Test
- @DisplayName("Transfer should throw exception when transferring to own wallet")
+    @Test
+    @DisplayName("Transfer should throw exception when transferring to own wallet")
     void transfer_ToOwnWallet_ShouldThrowException() {
 
         request.setReceiverWalletId(senderWallet.getId());
 
-        when(walletRepository.findByUser(sender))
-                .thenReturn(Optional.of(senderWallet));
+        when(walletRepository.findIdByUser(sender))
+                .thenReturn(Optional.of(senderWallet.getId()));
 
         assertThatThrownBy(() ->
                 transferService.transfer(sender, request))
@@ -160,56 +180,70 @@ class TransferServiceTest {
         verify(walletRepository, never()).save(any());
         verifyNoInteractions(ledgerService);
     }
- @Test
-@DisplayName("Transfer should throw exception when amount is zero")
-void transfer_WithZeroAmount_ShouldThrowException() {
 
-    request.setAmount(BigDecimal.ZERO);
+    @Test
+    @DisplayName("Transfer should throw exception when amount is zero")
+    void transfer_WithZeroAmount_ShouldThrowException() {
 
-    assertThatThrownBy(() ->
-            transferService.transfer(sender, request))
-            .isInstanceOf(InvalidTransferException.class)
-            .hasMessageContaining("Transfer amount must be greater than zero");
+        request.setAmount(BigDecimal.ZERO);
 
-    verifyNoInteractions(walletRepository);
-    verifyNoInteractions(ledgerService);
-}
+        assertThatThrownBy(() ->
+                transferService.transfer(sender, request))
+                .isInstanceOf(InvalidTransferException.class)
+                .hasMessageContaining("Transfer amount must be greater than zero");
 
-@Test
-@DisplayName("Transfer should throw exception when sender wallet is not found")
-void transfer_WhenSenderWalletNotFound_ShouldThrowException() {
+        verifyNoInteractions(walletRepository);
+        verifyNoInteractions(ledgerService);
+    }
 
-    when(walletRepository.findByUser(sender))
-            .thenReturn(Optional.empty());
+    @Test
+    @DisplayName("Transfer should throw exception when sender wallet is not found")
+    void transfer_WhenSenderWalletNotFound_ShouldThrowException() {
 
-    assertThatThrownBy(() ->
-            transferService.transfer(sender, request))
-            .isInstanceOf(WalletNotFoundException.class)
-            .hasMessageContaining("Sender wallet not found");
+        when(walletRepository.findIdByUser(sender))
+                .thenReturn(Optional.empty());
 
-    verify(walletRepository).findByUser(sender);
-    verify(walletRepository, never()).findByIdWithLock(any());
-    verify(walletRepository, never()).save(any());
-    verifyNoInteractions(ledgerService);
-}
+        assertThatThrownBy(() ->
+                transferService.transfer(sender, request))
+                .isInstanceOf(WalletNotFoundException.class)
+                .hasMessageContaining("Sender wallet not found");
 
-@Test
-@DisplayName("Transfer should throw exception when sender wallet is suspended")
-void transfer_WhenSenderWalletSuspended_ShouldThrowException() {
+        verify(walletRepository).findIdByUser(sender);
+        verify(walletRepository, never()).findByIdWithLock(any());
+        verify(walletRepository, never()).save(any());
+        verifyNoInteractions(ledgerService);
+    }
 
-    senderWallet.setStatus(WalletStatus.SUSPENDED);
+    @Test
+    @DisplayName("Transfer should throw exception when sender wallet is suspended")
+    void transfer_WhenSenderWalletSuspended_ShouldThrowException() {
 
-    when(walletRepository.findByUser(sender))
-            .thenReturn(Optional.of(senderWallet));
+        senderWallet.setStatus(WalletStatus.SUSPENDED);
 
-    assertThatThrownBy(() ->
-            transferService.transfer(sender, request))
-            .isInstanceOf(InvalidTransferException.class)
-          .hasMessageContaining("Sender wallet is not active");
+        when(walletRepository.findIdByUser(sender))
+                .thenReturn(Optional.of(senderWallet.getId()));
 
-    verify(walletRepository).findByUser(sender);
-    verify(walletRepository, never()).findByIdWithLock(any());
-    verify(walletRepository, never()).save(any());
-    verifyNoInteractions(ledgerService);
-}
+        UUID firstId = senderWallet.getId().compareTo(receiverWallet.getId()) < 0
+                ? senderWallet.getId()
+                : receiverWallet.getId();
+
+        UUID secondId = senderWallet.getId().compareTo(receiverWallet.getId()) < 0
+                ? receiverWallet.getId()
+                : senderWallet.getId();
+
+        when(walletRepository.findByIdWithLock(firstId))
+                .thenReturn(Optional.of(firstId.equals(senderWallet.getId()) ? senderWallet : receiverWallet));
+
+        when(walletRepository.findByIdWithLock(secondId))
+                .thenReturn(Optional.of(secondId.equals(senderWallet.getId()) ? senderWallet : receiverWallet));
+
+        assertThatThrownBy(() ->
+                transferService.transfer(sender, request))
+                .isInstanceOf(InvalidTransferException.class)
+                .hasMessageContaining("Sender wallet is not active");
+
+        verify(walletRepository).findIdByUser(sender);
+        verify(walletRepository, never()).save(any());
+        verifyNoInteractions(ledgerService);
+    }
 }

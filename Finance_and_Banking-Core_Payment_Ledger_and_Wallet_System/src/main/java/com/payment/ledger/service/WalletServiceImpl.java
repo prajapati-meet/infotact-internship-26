@@ -28,7 +28,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = new Wallet();
         wallet.setUser(user);
         wallet.setBalance(BigDecimal.ZERO);
-        wallet.setCurrency("USD");
+        wallet.setCurrency("INR");
         wallet.setStatus(WalletStatus.ACTIVE);
         Wallet saved = walletRepository.save(wallet);
 

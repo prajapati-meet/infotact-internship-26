@@ -7,4 +7,5 @@ public interface UserService {
 
      OtpResponse initiateRegistration(InitiateRegistrationRequest request);
      AuthResponse verifyOtpAndActivate(VerifyOtpRequest request);
+     OtpResponse resendOtp(String email);
 }

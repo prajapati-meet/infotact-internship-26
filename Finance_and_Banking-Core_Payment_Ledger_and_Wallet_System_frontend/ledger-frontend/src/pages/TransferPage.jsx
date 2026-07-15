@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import {
   FaWallet,
-  FaMoneyBillWave,
   FaRegStickyNote,
   FaPaperPlane,
+  FaExclamationCircle,
+  FaCheckCircle,
+  FaArrowLeft,
 } from "react-icons/fa";
+import { formatCurrency, getCurrencySymbol } from "../utils/currency";
+
 
 const TransferPage = () => {
   const navigate = useNavigate();
@@ -15,9 +19,24 @@ const TransferPage = () => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
+  const [balance, setBalance] = useState(null);
+  const [currency, setCurrency] = useState("INR");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchBalanceAndCurrency = async () => {
+      try {
+        const response = await axiosInstance.get("/wallet/me");
+        setBalance(response.data.balance);
+        setCurrency(response.data.currency || "INR");
+      } catch (err) {
+        console.error("Could not fetch balance for transfer header", err);
+      }
+    };
+    fetchBalanceAndCurrency();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,12 +63,18 @@ const TransferPage = () => {
       );
 
       setSuccess(
-        `Transfer successful! Updated Balance: ₹${response.data.balance}`
+        `Transfer successful! Updated Balance: ${formatCurrency(response.data.senderBalanceAfter, currency)}`
       );
 
       setReceiverWalletId("");
       setAmount("");
       setDescription("");
+
+      // Update current balance state in real-time
+      setBalance(response.data.senderBalanceAfter);
+      
+      // Dispatch event to update navbar notifications count and dropdown
+      window.dispatchEvent(new Event("notification-updated"));
 
       setTimeout(() => {
         navigate("/dashboard");
@@ -61,220 +86,151 @@ const TransferPage = () => {
     }
   };
 
-  const inputContainer = {
-    display: "flex",
-    alignItems: "center",
-    background: "#1f2937",
-    border: "1px solid #374151",
-    borderRadius: "40px",
-    height: "65px",
-    padding: "0 20px",
-    marginBottom: "20px",
-  };
-
-  const inputStyle = {
-    flex: 1,
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "#fff",
-    fontSize: "16px",
-    marginLeft: "15px",
-  };
-
   return (
-    <>
-      <style>{`
-        input::placeholder,
-        textarea::placeholder{
-          color:#9ca3af;
-        }
-      `}</style>
-
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background:
-            "linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb)",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: "450px",
-            maxWidth: "90%",
-            background: "#111827",
-            borderRadius: "25px",
-            padding: "40px",
-            boxShadow: "0 15px 40px rgba(0,0,0,.4)",
-          }}
-        >
-          <h1
+    <div className="auth-layout">
+      <div className="card" style={{ width: "100%", maxWidth: "500px" }}>
+        <div className="card-header" style={{ textAlign: "center" }}>
+          <div
             style={{
-              color: "#fff",
-              textAlign: "center",
-              marginBottom: "10px",
-              fontSize: "34px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "56px",
+              height: "56px",
+              borderRadius: "12px",
+              backgroundColor: "var(--color-primary-light)",
+              color: "var(--color-primary)",
+              marginBottom: "16px",
             }}
           >
-            Transfer Money
-          </h1>
+            <FaPaperPlane size={24} style={{ marginLeft: "-2px" }} />
+          </div>
+          <h1 className="card-title">Transfer Money</h1>
+          <p className="card-subtitle">Send money securely to another wallet account</p>
+        </div>
 
-          <p
-            style={{
-              color: "#9ca3af",
-              textAlign: "center",
-              marginBottom: "35px",
-            }}
-          >
-            Send money securely to another wallet
-          </p>
+        {balance !== null && (
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "var(--color-primary-light)",
+            border: "1px solid #bfdbfe",
+            borderRadius: "10px",
+            padding: "12px 18px",
+            marginBottom: "24px",
+            fontSize: "14px",
+            color: "var(--color-text-main)",
+            fontWeight: "500"
+          }}>
+            <span>Available Balance:</span>
+            <span style={{ fontWeight: "700", color: "var(--color-primary)", fontSize: "16px" }}>
+              {formatCurrency(balance, currency)}
+            </span>
+          </div>
+        )}
 
-          {error && (
-            <div
-              style={{
-                background: "#7f1d1d",
-                color: "#fff",
-                padding: "12px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="alert alert-danger">
+            <FaExclamationCircle className="alert-icon" />
+            <div>{error}</div>
+          </div>
+        )}
 
-          {success && (
-            <div
-              style={{
-                background: "#14532d",
-                color: "#fff",
-                padding: "12px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                textAlign: "center",
-              }}
-            >
-              {success}
-            </div>
-          )}
+        {success && (
+          <div className="alert alert-success">
+            <FaCheckCircle className="alert-icon" />
+            <div>{success}</div>
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={inputContainer}>
-              <FaWallet color="#fff" size={20} />
-
+        <form onSubmit={handleSubmit}>
+          {/* Receiver Wallet ID */}
+          <div className="form-group">
+            <label className="form-label">Receiver Wallet ID</label>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaWallet />
+              </span>
               <input
                 type="text"
-                placeholder="Receiver Wallet ID"
+                placeholder="Enter 36-character wallet address"
                 value={receiverWalletId}
-                onChange={(e) =>
-                  setReceiverWalletId(e.target.value)
-                }
-                style={inputStyle}
+                onChange={(e) => setReceiverWalletId(e.target.value)}
+                className="input-control"
                 required
               />
             </div>
+          </div>
 
-            <div style={inputContainer}>
-              <FaMoneyBillWave color="#fff" size={20} />
-
+          {/* Amount */}
+          <div className="form-group">
+            <label className="form-label">Amount ({currency})</label>
+            <div className="input-group">
+              <span className="input-icon" style={{ fontSize: "14px", fontWeight: "bold" }}>
+                {getCurrencySymbol(currency)}
+              </span>
               <input
                 type="number"
-                placeholder="Enter Amount"
+                placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 min="1"
                 step="0.01"
-                style={inputStyle}
+                className="input-control"
                 required
               />
             </div>
+          </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                background: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "20px",
-                padding: "20px",
-                marginBottom: "20px",
-              }}
-            >
-              <FaRegStickyNote
-                color="#fff"
-                size={20}
-                style={{ marginTop: "8px" }}
-              />
-
+          {/* Description */}
+          <div className="form-group">
+            <label className="form-label">Description (Optional)</label>
+            <div className="textarea-group">
+              <span className="input-icon">
+                <FaRegStickyNote />
+              </span>
               <textarea
-                rows="4"
-                placeholder="Transaction Description (Optional)"
+                placeholder="What is this transfer for?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                style={{
-                  flex: 1,
-                  marginLeft: "15px",
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "#fff",
-                  resize: "none",
-                  fontSize: "16px",
-                }}
+                className="input-control"
+                rows="3"
               />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                height: "60px",
-                border: "none",
-                borderRadius: "35px",
-                background:
-                  "linear-gradient(to right,#2563eb,#3b82f6)",
-                color: "#fff",
-                fontSize: "18px",
-                fontWeight: "bold",
-                cursor: loading ? "not-allowed" : "pointer",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <FaPaperPlane />
-              {loading ? "Sending..." : "Send Money"}
-            </button>
-          </form>
-
-          <p
-            style={{
-              color: "#9ca3af",
-              textAlign: "center",
-              marginTop: "25px",
-            }}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary btn-block"
+            style={{ marginTop: "8px", height: "52px" }}
           >
-            <Link
-              to="/dashboard"
-              style={{
-                color: "#60a5fa",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              ← Back to Dashboard
-            </Link>
-          </p>
+            <FaPaperPlane size={14} />
+            {loading ? "Processing..." : "Send Money"}
+          </button>
+        </form>
+
+        <div style={{ textAlign: "center", marginTop: "24px" }}>
+          <Link
+            to="/dashboard"
+            style={{
+              color: "var(--color-text-muted)",
+              fontWeight: "600",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+            }}
+            onMouseEnter={(e) => e.target.style.color = "var(--color-primary)"}
+            onMouseLeave={(e) => e.target.style.color = "var(--color-text-muted)"}
+          >
+            <FaArrowLeft size={12} />
+            Back to Dashboard
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
