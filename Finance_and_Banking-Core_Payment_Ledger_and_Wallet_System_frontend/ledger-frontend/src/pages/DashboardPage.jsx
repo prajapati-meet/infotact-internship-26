@@ -12,6 +12,8 @@ import {
   FaArrowRight,
   FaRegCopy,
   FaExclamationCircle,
+  FaShieldAlt,
+  FaChartBar,
 } from "react-icons/fa";
 import { formatCurrency } from "../utils/currency";
 
@@ -51,6 +53,7 @@ const getNotificationStyles = (type) => {
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
 
   const [wallet, setWallet] = useState(null);
   const [recentTransactions, setRecentTransactions] = useState([]);
@@ -161,14 +164,138 @@ const DashboardPage = () => {
   return (
     <div className="mx-auto max-w-[92%] px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Welcome Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Hello, <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">{user?.username || "User"}</span> 👋
-        </h1>
-        <p className="text-sm text-slate-500 mt-1.5">
-          Monitor your ledger wallet account and manage secure instant transfers.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Hello, <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">{user?.username || "User"}</span> 👋
+          </h1>
+          <p className="text-sm text-slate-500 mt-1.5">
+            {isAdmin
+              ? "You're logged in as Admin. Manage users, transactions, and the system below."
+              : "Monitor your ledger wallet account and manage secure instant transfers."}
+          </p>
+        </div>
+        {/* Admin Badge */}
+        {isAdmin && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              background: "linear-gradient(135deg, #7f1d1d, #dc2626)",
+              borderRadius: "999px",
+              color: "#fff",
+              fontWeight: "700",
+              fontSize: "13px",
+              boxShadow: "0 4px 12px rgba(220,38,38,0.35)",
+              flexShrink: 0,
+            }}
+          >
+            <FaShieldAlt size={14} />
+            Admin Mode
+          </div>
+        )}
       </div>
+
+      {/* Admin Quick Access Panel */}
+      {isAdmin && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%)",
+            borderRadius: "24px",
+            padding: "24px",
+            border: "1px solid rgba(220,38,38,0.25)",
+            boxShadow: "0 8px 32px rgba(15,23,42,0.3)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+            <div
+              style={{
+                padding: "8px",
+                background: "rgba(220,38,38,0.2)",
+                borderRadius: "10px",
+                border: "1px solid rgba(220,38,38,0.3)",
+              }}
+            >
+              <FaShieldAlt size={16} color="#fca5a5" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, color: "#fff", fontWeight: "800", fontSize: "16px" }}>
+                Admin Control Panel
+              </h3>
+              <p style={{ margin: 0, color: "rgba(255,255,255,0.45)", fontSize: "12px" }}>
+                Quick access to admin tools
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+            {/* Admin Dashboard */}
+            <button
+              onClick={() => navigate("/admin")}
+              style={{
+                padding: "16px",
+                background: "rgba(220,38,38,0.15)",
+                border: "1px solid rgba(220,38,38,0.3)",
+                borderRadius: "16px",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s",
+                color: "#fff",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(220,38,38,0.3)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(220,38,38,0.15)"}
+            >
+              <div style={{ fontSize: "22px", marginBottom: "8px" }}>🛡️</div>
+              <div style={{ fontWeight: "700", fontSize: "14px", color: "#fca5a5" }}>Admin Dashboard</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "4px" }}>Users, wallets & system</div>
+            </button>
+
+            {/* All Transactions */}
+            <button
+              onClick={() => navigate("/transactions")}
+              style={{
+                padding: "16px",
+                background: "rgba(59,130,246,0.15)",
+                border: "1px solid rgba(59,130,246,0.3)",
+                borderRadius: "16px",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s",
+                color: "#fff",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(59,130,246,0.3)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(59,130,246,0.15)"}
+            >
+              <div style={{ fontSize: "22px", marginBottom: "8px" }}>📊</div>
+              <div style={{ fontWeight: "700", fontSize: "14px", color: "#93c5fd" }}>All Transactions</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "4px" }}>Full ledger history</div>
+            </button>
+
+            {/* Send Money */}
+            <button
+              onClick={() => navigate("/transfer")}
+              style={{
+                padding: "16px",
+                background: "rgba(16,185,129,0.15)",
+                border: "1px solid rgba(16,185,129,0.3)",
+                borderRadius: "16px",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s",
+                color: "#fff",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.3)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(16,185,129,0.15)"}
+            >
+              <div style={{ fontSize: "22px", marginBottom: "8px" }}>💸</div>
+              <div style={{ fontWeight: "700", fontSize: "14px", color: "#6ee7b7" }}>Transfer Funds</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "4px" }}>Send money securely</div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
