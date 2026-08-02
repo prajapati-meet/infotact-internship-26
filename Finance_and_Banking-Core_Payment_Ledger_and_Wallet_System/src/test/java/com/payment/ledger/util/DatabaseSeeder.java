@@ -72,7 +72,7 @@ public class DatabaseSeeder {
         User sender = new User();
         sender.setUsername("sender_jmeter");
         sender.setEmail("sender@jmeter.com");
-        sender.setPasswordHash(passwordEncoder.encode("password123"));
+        sender.setPasswordHash(passwordEncoder.encode("12345678"));
         sender.setRole(Role.USER);
         sender.setEnabled(true);
         sender.setAccountStatus(AccountStatus.ACTIVE);
@@ -92,7 +92,7 @@ public class DatabaseSeeder {
         User receiver = new User();
         receiver.setUsername("receiver_jmeter");
         receiver.setEmail("receiver@jmeter.com");
-        receiver.setPasswordHash(passwordEncoder.encode("password123"));
+        receiver.setPasswordHash(passwordEncoder.encode("12345678"));
         receiver.setRole(Role.USER);
         receiver.setEnabled(true);
         receiver.setAccountStatus(AccountStatus.ACTIVE);
