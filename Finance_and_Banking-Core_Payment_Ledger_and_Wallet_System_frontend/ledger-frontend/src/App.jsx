@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import TransferPage from "./pages/TransferPage";
 import AccountPage from "./pages/AccountPage";
 import TransactionsPage from "./pages/TransactionsPage";
+import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import OtpVerificationPage from "./pages/OtpVerificationPage";
@@ -56,6 +57,15 @@ function App() {
           element={
             <ProtectedRoute>
               <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
